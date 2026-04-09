@@ -1,4 +1,3 @@
-Good call. TDD changes the order of work within each phase. Let me restructure the plan so that for every phase, **tests come first, implementation follows, green light before moving on**.
 
 ---
 
@@ -15,8 +14,9 @@ Good call. TDD changes the order of work within each phase. Let me restructure t
 ## Revised Project Structure
 
 ```
-bc-be-vat-reports/
+new_vat_reports_generator/
 ├── app.py
+├── plan.md
 ├── config.py
 ├── pyproject.toml
 ├── uv.lock
@@ -230,6 +230,3 @@ The UI layer is thin — it calls the already-tested modules. Testing here is li
 | 6 | Documentation and handoff | 0.5 day |
 | **Total** | | **~9 working days** |
 
-The extra 2 days compared to the previous estimate come from writing tests upfront and building the fixture data. The payoff: when you refactor the POC logic, you'll know immediately if something breaks, and your colleagues can run `uv run pytest` to verify their machine is set up correctly.
-
-Ready to start implementing, or anything to adjust?
