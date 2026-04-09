@@ -20,3 +20,9 @@ dev = [
     "pytest-mock",
     "pytest-cov",
 ]
+
+[tool.pytest.ini_options]
+addopts = "--cov-config=pyproject.toml"
+
+[tool.coverage.run]
+omit = ["data/sync_reports_GDrive.py"]
