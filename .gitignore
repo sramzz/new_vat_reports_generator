@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+
+# Secrets — NEVER commit these
+.env
+credentials.json
+token.json
+
+# Logs
+run.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# UV
+.python-version
+
+# Generated reports (local)
+output/

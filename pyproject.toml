@@ -1,7 +1,22 @@
 [project]
 name = "new-vat-reports-generator"
 version = "0.1.0"
-description = "Add your description here"
+description = "VAT accounting report generator for Belchicken stores"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "pyodbc",
+    "openpyxl",
+    "google-auth",
+    "google-auth-oauthlib",
+    "google-api-python-client",
+    "gradio",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-mock",
+    "pytest-cov",
+]
