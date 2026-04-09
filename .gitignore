@@ -25,5 +25,8 @@ Thumbs.db
 # UV
 .python-version
 
+# Coverage
+.coverage
+
 # Generated reports (local)
 output/
