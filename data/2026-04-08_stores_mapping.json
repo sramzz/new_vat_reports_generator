@@ -1,0 +1,333 @@
+{
+    "stores": [
+        {
+            "storeName": "Belchicken Wetteren",
+            "folderName": "Belchicken Wetteren",
+            "gdriveId": "19qH2-qQ0di2tcyWGDPP_GkzZa-LwSdJh",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Wetteren.xlsx",
+            "storeId": 262
+        },
+        {
+            "storeName": "Belchicken Lier",
+            "folderName": "Belchicken Lier",
+            "gdriveId": "1lThzW4GeEZkjVSikpJniHa_IkwIjRMp2",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Lier.xlsx",
+            "storeId": 263
+        },
+        {
+            "storeName": "Belchicken Kraainem",
+            "folderName": "Belchicken Kraainmen",
+            "gdriveId": "1yFS47vNImSrh-sSmZ-lZOKXqEpxI4S4Z",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Kraainem.xlsx",
+            "storeId": 223
+        },
+        {
+            "storeName": "Belchicken Brugge Zuidzandstraat",
+            "folderName": "Belchicken Brugge 2",
+            "gdriveId": "1XtC37DB66LKI2seyN_u_kWwNbI94S8C9",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Brugge Zuidzandstraat.xlsx",
+            "storeId": 236
+        },
+        {
+            "storeName": "Belchicken Ath",
+            "folderName": "Belchicken Ath",
+            "gdriveId": "1Yip8bHp_C8F6bvfNEOPGJNzPqCPx5lMJ",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Ath.xlsx",
+            "storeId": 261
+        },
+        {
+            "storeName": "Belchicken Astridplein",
+            "folderName": "Belchicken Astridplein",
+            "gdriveId": "1BBYjUTjO7EjRxWiBgu9nNCgaVFamtcca",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Astridplein.xlsx",
+            "storeId": 247
+        },
+        {
+            "storeName": "Belchicken Ruisbroek",
+            "folderName": "Belchicken Ruisbroek",
+            "gdriveId": "1rGadPAKIB8owLatbc7fmZ8VN_9CLuYbU",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Ruisbroek.xlsx",
+            "storeId": 218
+        },
+        {
+            "storeName": "Belchicken Merksem",
+            "folderName": "Belchicken Merksem",
+            "gdriveId": "1gmwtXYNRbaCvipx8zedvI4Z5JlOvuKAb",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Merksem.xlsx",
+            "storeId": 225
+        },
+        {
+            "storeName": "Belchicken Belle-Île Liège",
+            "folderName": "Belchicken Belle-Île Liège",
+            "gdriveId": "174j4BMXqWfidxgBjvnzInAMR07mbtuBv",
+            "excelFileName": null,
+            "storeId": 220
+        },
+        {
+            "storeName": "Belchicken Rive Gauche",
+            "folderName": "Belchicken Rive Gauche",
+            "gdriveId": "1R2On1TaoeoBnnRDw0KYmasYuTbF3d1l6",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Rive Gauche.xlsx",
+            "storeId": 245
+        },
+        {
+            "storeName": "Belchicken Mediacite",
+            "folderName": "Belchicken Mediacite",
+            "gdriveId": "1mDEGBPWci5SLHmlIb33yLAUr7PNH2Cpv",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Mediacite.xlsx",
+            "storeId": 239
+        },
+        {
+            "storeName": "Belchicken Schaarbeek",
+            "folderName": "Belchicken Schaarbeek",
+            "gdriveId": "1wcS-r43cHoX0ipl30QYnhaWhIl2QyPdw",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Schaarbeek.xlsx",
+            "storeId": 249
+        },
+        {
+            "storeName": "Belchicken Zaventem",
+            "folderName": "Belchicken Zaventem",
+            "gdriveId": "1OE8aWAj8fOe9wLsl40fENGaDv-cAghwi",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Zaventem.xlsx",
+            "storeId": 257
+        },
+        {
+            "storeName": "Belchicken Docks",
+            "folderName": "Belchicken Docks",
+            "gdriveId": "1vqaVnMwO63yZYKshPN6RmtAL-53PFnOd",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Docks.xlsx",
+            "storeId": 227
+        },
+        {
+            "storeName": "Belchicken Aalst",
+            "folderName": "Belchicken Aalst",
+            "gdriveId": "11Qt0N6pEWD4cJhjisvrh6N5t1uV4dkiT",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Aalst.xlsx",
+            "storeId": 217
+        },
+        {
+            "storeName": "Belchicken Ixelles",
+            "folderName": "Belchicken Ixelles",
+            "gdriveId": "1njrCLQfZgxuXwTeLpoD7xjpIcr5XexV7",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Ixelles.xlsx",
+            "storeId": 234
+        },
+        {
+            "storeName": "Belchicken Waterloo",
+            "folderName": "Belchicken Waterloo",
+            "gdriveId": "1fbjnQ92xSQ8R7VuMntmA3uKlyU3o7MMO",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Waterloo.xlsx",
+            "storeId": 254
+        },
+        {
+            "storeName": "Belchicken Verviers",
+            "folderName": "Belchicken Verviers",
+            "gdriveId": "1K19jGfKCRnRWpybfzsQilOdcWus58mv6",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Verviers.xlsx",
+            "storeId": 251
+        },
+        {
+            "storeName": "Belchicken Roeselare",
+            "folderName": "Belchicken Roeselare",
+            "gdriveId": "1SuzMbC6HcVF6r1eAULQYQFMV5y4GlOXV",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Roeselare.xlsx",
+            "storeId": 246
+        },
+        {
+            "storeName": "Belchicken Wavre",
+            "folderName": "Belchicken Wavre",
+            "gdriveId": "1TBRQcEDYBPOMffK7xhZU3i_1eAVtFFpU",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Wavre.xlsx",
+            "storeId": 255
+        },
+        {
+            "storeName": "Belchicken Vilvoorde",
+            "folderName": "Belchicken Vilvoorde",
+            "gdriveId": "10Xw_xGYD65VB7uX4JC5rXizNc_4hEBu_",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Vilvoorde.xlsx",
+            "storeId": 252
+        },
+        {
+            "storeName": "Belchicken Oostende",
+            "folderName": "Belchicken Oostende",
+            "gdriveId": "16vsGY92b3BuTDvsetYZg31vZ4vpzEuuS",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Oostende.xlsx",
+            "storeId": 243
+        },
+        {
+            "storeName": "Belchicken Molenbeek",
+            "folderName": "Belchicken Molenbeek",
+            "gdriveId": "14eu59_DHXjOha4VAY2-SA0mpoosfr5bR",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Molenbeek.xlsx",
+            "storeId": 241
+        },
+        {
+            "storeName": "Belchicken Diest",
+            "folderName": "Belchicken Diest",
+            "gdriveId": "1ld3GhCI3tyl1aN6KQgNZrvazyoi4tWOM",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Diest.xlsx",
+            "storeId": 226
+        },
+        {
+            "storeName": "Belchicken Halle",
+            "folderName": "Belchicken Halle",
+            "gdriveId": "11Uyplgg5Yl2KIi9VAa39Ed09UqFj4n94",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Halle.xlsx",
+            "storeId": 230
+        },
+        {
+            "storeName": "Belchicken Hasselt",
+            "folderName": "Belchicken Hasselt",
+            "gdriveId": "1V0iJjQOwJgkWQlpt9ldran6kalQnEu89",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Hasselt.xlsx",
+            "storeId": 231
+        },
+        {
+            "storeName": "Belchicken Wijnegem",
+            "folderName": "Belchicken Wijnegem",
+            "gdriveId": "1nUbahoAvAHtONouidvSBe-9-qpFraSPj",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Wijnegem.xlsx",
+            "storeId": 244
+        },
+        {
+            "storeName": "Belchicken Geraardsbergen",
+            "folderName": "Belchicken Geraardsbergen",
+            "gdriveId": "10sihNdDyPtn0VrlSm9fkFSl6J4yLQd_A",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Geraardsbergen.xlsx",
+            "storeId": 229
+        },
+        {
+            "storeName": "Belchicken Mechelen",
+            "folderName": "Belchicken Mechelen",
+            "gdriveId": "1UWqZrkJRBsx7hwJHGgW-4_ROe0bcIxKI",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Mechelen.xlsx",
+            "storeId": 238
+        },
+        {
+            "storeName": "Belchicken Rue Neuve",
+            "folderName": "Belchicken Rue Neuve",
+            "gdriveId": "1GJ47WXdOssBhHWkOlIv_49LtgbRein4N",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Rue Neuve.xlsx",
+            "storeId": 248
+        },
+        {
+            "storeName": "Belchicken Uccle",
+            "folderName": "Belchicken Uccle",
+            "gdriveId": "1FSZcvtdID9Vemo_-BlPXPt94SuW0UZnL",
+            "excelFileName": null,
+            "storeId": 250
+        },
+        {
+            "storeName": "Belchicken Westland",
+            "folderName": "Belchicken Westland",
+            "gdriveId": "1d8GhetouKTVDnT3_ZVYaPDbbQMBXjRqp",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Westland.xlsx",
+            "storeId": 256
+        },
+        {
+            "storeName": "Belchicken Uccle De Bue",
+            "folderName": "Belchicken Uccle de Bue",
+            "gdriveId": "1Mo9xnVXCoAn5gumEubKg1AyZPdLLQkbD",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Uccle De Bue.xlsx",
+            "storeId": 253
+        },
+        {
+            "storeName": "Belchicken Mons",
+            "folderName": "Belchicken Mons",
+            "gdriveId": "1YMKKyRgvQuNFd3fyrTbPvWrhDup42Kac",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Mons.xlsx",
+            "storeId": 242
+        },
+        {
+            "storeName": "Belchicken Houba",
+            "folderName": "Belchicken Houba",
+            "gdriveId": "1Q4SvYx0YEEPMAYym6yg62otlcEddoiyn",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Houba.xlsx",
+            "storeId": 258
+        },
+        {
+            "storeName": "Belchicken Hoboken",
+            "folderName": "Belchicken Hoboken",
+            "gdriveId": "1l7VldyQrvgHcaQCZW3B7MEL9_qzjtpiV",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Hoboken.xlsx",
+            "storeId": 233
+        },
+        {
+            "storeName": "Belchicken Heist",
+            "folderName": "Belchicken Heist",
+            "gdriveId": "1zymI-J6elM13cK-5s9UMRCKX1Z-EmzRt",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Heist.xlsx",
+            "storeId": 232
+        },
+        {
+            "storeName": "Belchicken Etterbeek",
+            "folderName": "Belchicken Etterbeek",
+            "gdriveId": "1M9hXxkZGTX2r2qY7JCUuHDobL6PgLG0J",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Etterbeek.xlsx",
+            "storeId": 228
+        },
+        {
+            "storeName": "Belchicken City2 Shopping Center",
+            "folderName": "Belchicken City2",
+            "gdriveId": "1ZPaRgqeHg6LTGXgbVSEE_MBRU8T_eson",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken City2 Shopping Center.xlsx",
+            "storeId": 222
+        },
+        {
+            "storeName": "Belchicken Asse",
+            "folderName": "Belchicken Asse",
+            "gdriveId": "1E4-1O-CNqLyCl-BS1ejI4025J3WnGldb",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Asse.xlsx",
+            "storeId": 224
+        },
+        {
+            "storeName": "Belchicken Leuven",
+            "folderName": "Belchicken Leuven",
+            "gdriveId": "1vFvf6RZLwJ1pUYmfB_P5jKIqpBdoYhnE",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Leuven.xlsx",
+            "storeId": 235
+        },
+        {
+            "storeName": "Belchicken Meir",
+            "folderName": "Belchicken Meir",
+            "gdriveId": "185egjh6twSRUkuK0yj2Ecm6D7DRLypjQ",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Meir.xlsx",
+            "storeId": 240
+        },
+        {
+            "storeName": "Belchicken Brugge",
+            "folderName": "Belchicken Brugge",
+            "gdriveId": "1aSjbbaVDxX4eTRvVM364Rnx7JKb7mg-q",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Brugge.xlsx",
+            "storeId": 221
+        },
+        {
+            "storeName": "Belchicken Basilix Shopping",
+            "folderName": "Belchicken Basilix",
+            "gdriveId": "1UzU7UfTmdbJvfb-2vV4xlKn1A5IvIQ4E",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Basilix Shopping.xlsx",
+            "storeId": 219
+        },
+        {
+            "storeName": "Belchicken Overpoort",
+            "folderName": "Belchicken Overpoort",
+            "gdriveId": "1gsr5VomacchC1P0w5CGOBNLrtkcT-9wQ",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Overpoort.xlsx",
+            "storeId": 264
+        },
+        {
+            "storeName": "Belchicken A12 Drive",
+            "folderName": "Belchicken A12 Drive",
+            "gdriveId": "1SnleXC0gwDPQ7kwZfSus3D-9CYsUYazi",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken A12 Drive.xlsx",
+            "storeId": 266
+        },
+        {
+            "storeName": "Belchicken Aartselaar",
+            "folderName": "Belchicken Aartselaar",
+            "gdriveId": "1WSMMnww_GsTu2xXE13gboJjW0FBxbiN5",
+            "excelFileName": "Q1 - March 2026 - VAT Accounting Report - Belchicken Aartselaar.xlsx",
+            "storeId": 265
+        }
+    ]
+}
