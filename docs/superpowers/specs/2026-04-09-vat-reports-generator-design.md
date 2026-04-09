@@ -122,7 +122,7 @@ OAuth2 via `google-auth-oauthlib`. Uses `InstalledAppFlow.run_local_server()` fo
 
 **Scope:** `https://www.googleapis.com/auth/drive` (full Drive access for upload + permission management).
 
-**Files:** `credentials.json` (OAuth client config, provided by user during setup) and `token.json` (auto-generated, gitignored).
+**Files:** `credentials.json` (OAuth client config, provided by user during setup) and `token.json` (auto-generated). Both files MUST be in `.gitignore` along with `.env` — these must never be committed.
 
 ### `drive/upload.py` — File Upload
 
@@ -169,12 +169,12 @@ Manages `data/store_mapping.json` — the mapping from `storeId` to Google Drive
 - `add_store(storeId, storeName, gdriveId)` — adds new entry, persists to file
 - `get_all_stores()` — returns full mapping
 
-### `reports/split.py` — Data Splitting
+### `reports/split.py` — Data Filtering
 
-Groups raw query results by store and month.
+Partitions raw query results by store and month. The query already returns all rows tagged with `StoreId` and `CreatedOn` — this module just filters/partitions them, no aggregation.
 
-- `split_by_store(rows)` — groups rows by `StoreId`, returns `dict[int, list[dict]]`
-- `split_by_month(rows)` — groups a store's rows by month (derived from `CreatedOn`), returns `dict[str, list[dict]]` where key is month name (e.g., "January")
+- `filter_by_store(rows)` — partitions rows by `StoreId`, returns `dict[int, list[dict]]`
+- `filter_by_month(rows)` — partitions a store's rows by month (derived from `CreatedOn`), returns `dict[str, list[dict]]` where key is month name (e.g., "January")
 - Missing dates within a month are normal (store closed that day) — no padding needed.
 
 ### `reports/excel.py` — Excel Generation
@@ -313,6 +313,7 @@ Tracked in `data/last_run.json` — stores file IDs of everything uploaded in th
 
 ### Logging
 - All actions logged to `run.log` (gitignored): timestamps, report name, months, row counts, per-store success/failure, new stores detected, rollback actions, errors.
+- **Log retention:** On each run, if `run.log` is older than 10 days, it is deleted before the new run starts. No accumulation.
 - UI has a "View Logs" button that opens the folder containing `run.log` in the system file explorer.
 
 ## Testing Strategy
