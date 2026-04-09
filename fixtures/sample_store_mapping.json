@@ -1,0 +1,7 @@
+{
+    "stores": [
+        {"storeId": 100, "storeName": "Belchicken Aalst", "folderName": "Belchicken Aalst", "gdriveId": "fake-gdrive-id-aalst"},
+        {"storeId": 200, "storeName": "Belchicken Brugge", "folderName": "Belchicken Brugge", "gdriveId": "fake-gdrive-id-brugge"},
+        {"storeId": 300, "storeName": "Belchicken Leuven", "folderName": "Belchicken Leuven", "gdriveId": "fake-gdrive-id-leuven"}
+    ]
+}

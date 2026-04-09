@@ -1,0 +1,11 @@
+{
+    "report_name": "Q1 - March 2026",
+    "created_at": "2026-04-01T10:00:00",
+    "files": [
+        {"file_id": "fake-file-id-aalst", "store_id": 100, "store_name": "Belchicken Aalst", "type": "report"},
+        {"file_id": "fake-file-id-brugge", "store_id": 200, "store_name": "Belchicken Brugge", "type": "report"},
+        {"file_id": "fake-file-id-leuven", "store_id": 300, "store_name": "Belchicken Leuven", "type": "report"},
+        {"file_id": "fake-file-id-raw", "store_id": null, "store_name": null, "type": "raw_backup"},
+        {"file_id": "fake-file-id-summary", "store_id": null, "store_name": null, "type": "summary"}
+    ]
+}
