@@ -1,0 +1,286 @@
+{
+    "stores": [
+        {
+            "storeId": 262,
+            "storeName": "Belchicken Wetteren",
+            "folderName": "Belchicken Wetteren",
+            "gdriveId": "19qH2-qQ0di2tcyWGDPP_GkzZa-LwSdJh"
+        },
+        {
+            "storeId": 263,
+            "storeName": "Belchicken Lier",
+            "folderName": "Belchicken Lier",
+            "gdriveId": "1lThzW4GeEZkjVSikpJniHa_IkwIjRMp2"
+        },
+        {
+            "storeId": 223,
+            "storeName": "Belchicken Kraainem",
+            "folderName": "Belchicken Kraainmen",
+            "gdriveId": "1yFS47vNImSrh-sSmZ-lZOKXqEpxI4S4Z"
+        },
+        {
+            "storeId": 236,
+            "storeName": "Belchicken Brugge Zuidzandstraat",
+            "folderName": "Belchicken Brugge 2",
+            "gdriveId": "1XtC37DB66LKI2seyN_u_kWwNbI94S8C9"
+        },
+        {
+            "storeId": 261,
+            "storeName": "Belchicken Ath",
+            "folderName": "Belchicken Ath",
+            "gdriveId": "1Yip8bHp_C8F6bvfNEOPGJNzPqCPx5lMJ"
+        },
+        {
+            "storeId": 247,
+            "storeName": "Belchicken Astridplein",
+            "folderName": "Belchicken Astridplein",
+            "gdriveId": "1BBYjUTjO7EjRxWiBgu9nNCgaVFamtcca"
+        },
+        {
+            "storeId": 218,
+            "storeName": "Belchicken Ruisbroek",
+            "folderName": "Belchicken Ruisbroek",
+            "gdriveId": "1rGadPAKIB8owLatbc7fmZ8VN_9CLuYbU"
+        },
+        {
+            "storeId": 225,
+            "storeName": "Belchicken Merksem",
+            "folderName": "Belchicken Merksem",
+            "gdriveId": "1gmwtXYNRbaCvipx8zedvI4Z5JlOvuKAb"
+        },
+        {
+            "storeId": 220,
+            "storeName": "Belchicken Belle-Île Liège",
+            "folderName": "Belchicken Belle-Île Liège",
+            "gdriveId": "174j4BMXqWfidxgBjvnzInAMR07mbtuBv"
+        },
+        {
+            "storeId": 245,
+            "storeName": "Belchicken Rive Gauche",
+            "folderName": "Belchicken Rive Gauche",
+            "gdriveId": "1R2On1TaoeoBnnRDw0KYmasYuTbF3d1l6"
+        },
+        {
+            "storeId": 239,
+            "storeName": "Belchicken Mediacite",
+            "folderName": "Belchicken Mediacite",
+            "gdriveId": "1mDEGBPWci5SLHmlIb33yLAUr7PNH2Cpv"
+        },
+        {
+            "storeId": 249,
+            "storeName": "Belchicken Schaarbeek",
+            "folderName": "Belchicken Schaarbeek",
+            "gdriveId": "1wcS-r43cHoX0ipl30QYnhaWhIl2QyPdw"
+        },
+        {
+            "storeId": 257,
+            "storeName": "Belchicken Zaventem",
+            "folderName": "Belchicken Zaventem",
+            "gdriveId": "1OE8aWAj8fOe9wLsl40fENGaDv-cAghwi"
+        },
+        {
+            "storeId": 227,
+            "storeName": "Belchicken Docks",
+            "folderName": "Belchicken Docks",
+            "gdriveId": "1vqaVnMwO63yZYKshPN6RmtAL-53PFnOd"
+        },
+        {
+            "storeId": 217,
+            "storeName": "Belchicken Aalst",
+            "folderName": "Belchicken Aalst",
+            "gdriveId": "11Qt0N6pEWD4cJhjisvrh6N5t1uV4dkiT"
+        },
+        {
+            "storeId": 234,
+            "storeName": "Belchicken Ixelles",
+            "folderName": "Belchicken Ixelles",
+            "gdriveId": "1njrCLQfZgxuXwTeLpoD7xjpIcr5XexV7"
+        },
+        {
+            "storeId": 254,
+            "storeName": "Belchicken Waterloo",
+            "folderName": "Belchicken Waterloo",
+            "gdriveId": "1fbjnQ92xSQ8R7VuMntmA3uKlyU3o7MMO"
+        },
+        {
+            "storeId": 251,
+            "storeName": "Belchicken Verviers",
+            "folderName": "Belchicken Verviers",
+            "gdriveId": "1K19jGfKCRnRWpybfzsQilOdcWus58mv6"
+        },
+        {
+            "storeId": 246,
+            "storeName": "Belchicken Roeselare",
+            "folderName": "Belchicken Roeselare",
+            "gdriveId": "1SuzMbC6HcVF6r1eAULQYQFMV5y4GlOXV"
+        },
+        {
+            "storeId": 255,
+            "storeName": "Belchicken Wavre",
+            "folderName": "Belchicken Wavre",
+            "gdriveId": "1TBRQcEDYBPOMffK7xhZU3i_1eAVtFFpU"
+        },
+        {
+            "storeId": 252,
+            "storeName": "Belchicken Vilvoorde",
+            "folderName": "Belchicken Vilvoorde",
+            "gdriveId": "10Xw_xGYD65VB7uX4JC5rXizNc_4hEBu_"
+        },
+        {
+            "storeId": 243,
+            "storeName": "Belchicken Oostende",
+            "folderName": "Belchicken Oostende",
+            "gdriveId": "16vsGY92b3BuTDvsetYZg31vZ4vpzEuuS"
+        },
+        {
+            "storeId": 241,
+            "storeName": "Belchicken Molenbeek",
+            "folderName": "Belchicken Molenbeek",
+            "gdriveId": "14eu59_DHXjOha4VAY2-SA0mpoosfr5bR"
+        },
+        {
+            "storeId": 226,
+            "storeName": "Belchicken Diest",
+            "folderName": "Belchicken Diest",
+            "gdriveId": "1ld3GhCI3tyl1aN6KQgNZrvazyoi4tWOM"
+        },
+        {
+            "storeId": 230,
+            "storeName": "Belchicken Halle",
+            "folderName": "Belchicken Halle",
+            "gdriveId": "11Uyplgg5Yl2KIi9VAa39Ed09UqFj4n94"
+        },
+        {
+            "storeId": 231,
+            "storeName": "Belchicken Hasselt",
+            "folderName": "Belchicken Hasselt",
+            "gdriveId": "1V0iJjQOwJgkWQlpt9ldran6kalQnEu89"
+        },
+        {
+            "storeId": 244,
+            "storeName": "Belchicken Wijnegem",
+            "folderName": "Belchicken Wijnegem",
+            "gdriveId": "1nUbahoAvAHtONouidvSBe-9-qpFraSPj"
+        },
+        {
+            "storeId": 229,
+            "storeName": "Belchicken Geraardsbergen",
+            "folderName": "Belchicken Geraardsbergen",
+            "gdriveId": "10sihNdDyPtn0VrlSm9fkFSl6J4yLQd_A"
+        },
+        {
+            "storeId": 238,
+            "storeName": "Belchicken Mechelen",
+            "folderName": "Belchicken Mechelen",
+            "gdriveId": "1UWqZrkJRBsx7hwJHGgW-4_ROe0bcIxKI"
+        },
+        {
+            "storeId": 248,
+            "storeName": "Belchicken Rue Neuve",
+            "folderName": "Belchicken Rue Neuve",
+            "gdriveId": "1GJ47WXdOssBhHWkOlIv_49LtgbRein4N"
+        },
+        {
+            "storeId": 250,
+            "storeName": "Belchicken Uccle",
+            "folderName": "Belchicken Uccle",
+            "gdriveId": "1FSZcvtdID9Vemo_-BlPXPt94SuW0UZnL"
+        },
+        {
+            "storeId": 256,
+            "storeName": "Belchicken Westland",
+            "folderName": "Belchicken Westland",
+            "gdriveId": "1d8GhetouKTVDnT3_ZVYaPDbbQMBXjRqp"
+        },
+        {
+            "storeId": 253,
+            "storeName": "Belchicken Uccle De Bue",
+            "folderName": "Belchicken Uccle de Bue",
+            "gdriveId": "1Mo9xnVXCoAn5gumEubKg1AyZPdLLQkbD"
+        },
+        {
+            "storeId": 242,
+            "storeName": "Belchicken Mons",
+            "folderName": "Belchicken Mons",
+            "gdriveId": "1YMKKyRgvQuNFd3fyrTbPvWrhDup42Kac"
+        },
+        {
+            "storeId": 258,
+            "storeName": "Belchicken Houba",
+            "folderName": "Belchicken Houba",
+            "gdriveId": "1Q4SvYx0YEEPMAYym6yg62otlcEddoiyn"
+        },
+        {
+            "storeId": 233,
+            "storeName": "Belchicken Hoboken",
+            "folderName": "Belchicken Hoboken",
+            "gdriveId": "1l7VldyQrvgHcaQCZW3B7MEL9_qzjtpiV"
+        },
+        {
+            "storeId": 232,
+            "storeName": "Belchicken Heist",
+            "folderName": "Belchicken Heist",
+            "gdriveId": "1zymI-J6elM13cK-5s9UMRCKX1Z-EmzRt"
+        },
+        {
+            "storeId": 228,
+            "storeName": "Belchicken Etterbeek",
+            "folderName": "Belchicken Etterbeek",
+            "gdriveId": "1M9hXxkZGTX2r2qY7JCUuHDobL6PgLG0J"
+        },
+        {
+            "storeId": 222,
+            "storeName": "Belchicken City2 Shopping Center",
+            "folderName": "Belchicken City2",
+            "gdriveId": "1ZPaRgqeHg6LTGXgbVSEE_MBRU8T_eson"
+        },
+        {
+            "storeId": 224,
+            "storeName": "Belchicken Asse",
+            "folderName": "Belchicken Asse",
+            "gdriveId": "1E4-1O-CNqLyCl-BS1ejI4025J3WnGldb"
+        },
+        {
+            "storeId": 235,
+            "storeName": "Belchicken Leuven",
+            "folderName": "Belchicken Leuven",
+            "gdriveId": "1vFvf6RZLwJ1pUYmfB_P5jKIqpBdoYhnE"
+        },
+        {
+            "storeId": 240,
+            "storeName": "Belchicken Meir",
+            "folderName": "Belchicken Meir",
+            "gdriveId": "185egjh6twSRUkuK0yj2Ecm6D7DRLypjQ"
+        },
+        {
+            "storeId": 221,
+            "storeName": "Belchicken Brugge",
+            "folderName": "Belchicken Brugge",
+            "gdriveId": "1aSjbbaVDxX4eTRvVM364Rnx7JKb7mg-q"
+        },
+        {
+            "storeId": 219,
+            "storeName": "Belchicken Basilix Shopping",
+            "folderName": "Belchicken Basilix",
+            "gdriveId": "1UzU7UfTmdbJvfb-2vV4xlKn1A5IvIQ4E"
+        },
+        {
+            "storeId": 264,
+            "storeName": "Belchicken Overpoort",
+            "folderName": "Belchicken Overpoort",
+            "gdriveId": "1gsr5VomacchC1P0w5CGOBNLrtkcT-9wQ"
+        },
+        {
+            "storeId": 266,
+            "storeName": "Belchicken A12 Drive",
+            "folderName": "Belchicken A12 Drive",
+            "gdriveId": "1SnleXC0gwDPQ7kwZfSus3D-9CYsUYazi"
+        },
+        {
+            "storeId": 265,
+            "storeName": "Belchicken Aartselaar",
+            "folderName": "Belchicken Aartselaar",
+            "gdriveId": "1WSMMnww_GsTu2xXE13gboJjW0FBxbiN5"
+        }
+    ]
+}
