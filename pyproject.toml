@@ -5,7 +5,7 @@ description = "VAT accounting report generator for Belchicken stores"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "pyodbc",
+    "mssql-python",
     "openpyxl",
     "google-auth",
     "google-auth-oauthlib",
@@ -23,6 +23,9 @@ dev = [
 
 [tool.pytest.ini_options]
 addopts = "--cov-config=pyproject.toml"
+markers = [
+    "live: tests that require real database/Drive credentials (deselected by default)",
+]
 
 [tool.coverage.run]
 omit = ["data/sync_reports_GDrive.py"]
