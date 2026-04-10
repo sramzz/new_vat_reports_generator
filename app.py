@@ -94,9 +94,6 @@ def generate_reports(report_name: str, months: list[str], year: int, is_quarterl
         if auth_method == "active_directory_interactive":
             log(">> Entra ID Interactive — a browser window may open for MFA")
             yield state(status="**Connecting to database...** MFA browser popup may appear.")
-        elif auth_method == "active_directory_default":
-            log(">> Entra ID Default — using cached 'az login' credential")
-            yield state(status="**Connecting to database...** Using cached az login credential.")
         elif auth_method == "sql_auth":
             log(f">> Using SQL Server authentication (user: {cfg.AZURE_SQL_AUTH_USERNAME})")
             yield state(status="**Connecting to database...** Using SQL username/password.")

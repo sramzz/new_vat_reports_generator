@@ -33,12 +33,11 @@ Replace `pyodbc` with Microsoft's `mssql-python` driver for all SQL Server conne
 
 ## 2. Authentication Architecture
 
-Four auth methods, all using `mssql-python`'s built-in connection string authentication:
+Three auth methods, all using `mssql-python`'s built-in connection string authentication:
 
 | `AUTH_METHOD` value | Connection String Auth Param | Extra Params | Use Case |
 |---|---|---|---|
 | `active_directory_interactive` **(DEFAULT)** | `Authentication=ActiveDirectoryInteractive` | none | Mac dev with MFA browser popup |
-| `active_directory_default` | `Authentication=ActiveDirectoryDefault` | none | Mac dev after `az login` (silent) |
 | `sql_auth` | none (uses `UID`/`PWD`) | `UID`, `PWD` from env | Legacy/simple auth |
 | `service_principal` | `Authentication=ActiveDirectoryServicePrincipal` | `UID=client_id`, `PWD=client_secret` from env; `AZURE_TENANT_ID` read from env by driver if needed | CI/production |
 
@@ -142,7 +141,7 @@ AZURE_SQL_AUTH_PASSWORD = os.environ.get("AZURE_SQL_AUTH_PASSWORD", "")
 # Connection string (required)
 AZURE_SQL_CONNECTIONSTRING=Server=your-server.database.windows.net;Database=your-database;Encrypt=yes;TrustServerCertificate=no;
 
-# Auth method: active_directory_interactive | active_directory_default | sql_auth | service_principal
+# Auth method: active_directory_interactive | sql_auth | service_principal
 AUTH_METHOD=active_directory_interactive
 
 # Timeout in seconds (default 1800 = 30 min)
@@ -187,7 +186,7 @@ INFO  - Database connection closed
 ```
 ERROR - Database connection failed using auth method 'active_directory_interactive'
 ERROR - Error: [OperationalError] Login failed for user 'someone@company.com'
-ERROR - Suggestions: 1) Check your Azure permissions 2) Run 'az login' and try AUTH_METHOD=active_directory_default 3) Check IP whitelist in Azure portal
+ERROR - Suggestions: 1) Check your Azure permissions 2) Complete the browser MFA flow for interactive login 3) Check IP whitelist in Azure portal
 
 ERROR - Database query timed out after 1800s
 ERROR - Suggestions: 1) Increase DB_TIMEOUT env var 2) Check if the query is running in Azure portal 3) Try fewer months at once
@@ -229,8 +228,6 @@ Each live test follows the same pattern:
 | `test_sql_auth.py` | SQL username/password |
 | `test_service_principal.py` | Client ID/secret |
 | `test_active_directory_interactive.py` | Browser MFA popup |
-| `test_active_directory_default.py` | `az login` cached credential |
-
 ### Network Tests (`tests/db_auth/test_network.py`) — `@pytest.mark.live`
 
 | Test | What It Checks | Failure Message |
@@ -272,7 +269,6 @@ Minimal — same public API (`execute_query`), same error handling.
 | `tests/db_auth/test_sql_auth.py` | Rewrite | Medium — new driver API |
 | `tests/db_auth/test_service_principal.py` | Rewrite | Medium — new driver API |
 | `tests/db_auth/test_active_directory_interactive.py` | New | Medium — new auth method |
-| `tests/db_auth/test_active_directory_default.py` | New | Medium — new auth method |
 | `tests/db_auth/test_network.py` | Rewrite | Low — remove ODBC checks |
 | `tests/db_auth/test_azure_ad_interactive.py` | Delete | — |
 | `tests/db_auth/test_azure_ad_password.py` | Delete | — |

@@ -21,7 +21,6 @@ _DATE_RANGES_PATTERN = re.compile(
 
 _VALID_AUTH_METHODS = {
     "active_directory_interactive",
-    "active_directory_default",
     "sql_auth",
     "service_principal",
 }
@@ -72,9 +71,6 @@ def _build_connection_string() -> str:
     if auth == "active_directory_interactive":
         return base + "Authentication=ActiveDirectoryInteractive;"
 
-    if auth == "active_directory_default":
-        return base + "Authentication=ActiveDirectoryDefault;"
-
     if auth == "sql_auth":
         username = _require_setting("AZURE_SQL_AUTH_USERNAME", config.AZURE_SQL_AUTH_USERNAME)
         password = _require_setting("AZURE_SQL_AUTH_PASSWORD", config.AZURE_SQL_AUTH_PASSWORD)
@@ -97,8 +93,6 @@ def _connect():
 
     if auth == "active_directory_interactive":
         logger.info("Connecting to database... (this may open a browser window for MFA)")
-    elif auth == "active_directory_default":
-        logger.info("Connecting to database... (using cached az login credential)")
     else:
         logger.info("Connecting to database...")
 
@@ -128,7 +122,7 @@ def execute_query(months: list[int], year: int) -> list[dict]:
         logger.error(f"Error: {e}")
         logger.error(
             "Suggestions: 1) Check your Azure permissions "
-            "2) Run 'az login' and try AUTH_METHOD=active_directory_default "
+            "2) Complete the browser MFA flow for interactive login "
             "3) Check IP whitelist in Azure portal"
         )
         raise ConnectionError(f"Failed to connect to database: {e}") from e

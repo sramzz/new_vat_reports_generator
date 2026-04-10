@@ -4,7 +4,7 @@
 
 **Goal:** Replace pyodbc with Microsoft's mssql-python driver, enabling native Entra ID MFA authentication on macOS and simplifying the codebase.
 
-**Architecture:** Single connection string (`AZURE_SQL_CONNECTIONSTRING`) with auth method appended based on `AUTH_METHOD` env var. Four auth methods: `active_directory_interactive` (default), `active_directory_default`, `sql_auth`, `service_principal`. All use mssql-python's built-in auth — no manual token handling.
+**Architecture:** Single connection string (`AZURE_SQL_CONNECTIONSTRING`) with auth method appended based on `AUTH_METHOD` env var. Three auth methods: `active_directory_interactive` (default), `sql_auth`, `service_principal`. All use mssql-python's built-in auth — no manual token handling.
 
 **Tech Stack:** Python 3.13, mssql-python, pytest, uv
 
@@ -29,7 +29,6 @@
 | `tests/db_auth/test_sql_auth.py` | Live SQL auth test | Rewrite — mssql-python |
 | `tests/db_auth/test_service_principal.py` | Live service principal test | Rewrite — mssql-python |
 | `tests/db_auth/test_active_directory_interactive.py` | Live interactive MFA test | Create |
-| `tests/db_auth/test_active_directory_default.py` | Live az-login-cached test | Create |
 | `tests/db_auth/test_network.py` | DNS, TCP, TLS reachability | Rewrite from test_driver_and_network.py |
 | `app.py` | Gradio UI — auth method display | Update — new auth method names |
 | `README.md` | User-facing docs | Update — new setup, config, auth |
@@ -185,9 +184,8 @@ Replace the entire contents of `.env.example` with:
 # Contains server, database, encryption settings — auth is appended by the app
 AZURE_SQL_CONNECTIONSTRING=Server=your-server.database.windows.net;Database=your-database;Encrypt=yes;TrustServerCertificate=no;
 
-# Auth method: active_directory_interactive | active_directory_default | sql_auth | service_principal
+# Auth method: active_directory_interactive | sql_auth | service_principal
 # active_directory_interactive: Opens browser for MFA login (default, recommended for Mac)
-# active_directory_default: Uses cached az login credential (run 'az login' first)
 # sql_auth: Native SQL Server username/password
 # service_principal: App-only Entra token (CI/production)
 AUTH_METHOD=active_directory_interactive
@@ -294,12 +292,12 @@ class TestBuildConnectionString:
         assert "Authentication=ActiveDirectoryInteractive;" in result
         assert BASE_CONN_STR in result
 
-    def test_active_directory_default(self):
+    def test_invalid_auth_method_is_unsupported(self):
         with patch("db.query.config") as mock_config:
             mock_config.AZURE_SQL_CONNECTIONSTRING = BASE_CONN_STR
-            mock_config.AUTH_METHOD = "active_directory_default"
-            result = _build_connection_string()
-        assert "Authentication=ActiveDirectoryDefault;" in result
+            mock_config.AUTH_METHOD = "unsupported_auth"
+            with pytest.raises(ValueError, match="Unsupported AUTH_METHOD"):
+                _build_connection_string()
 
     def test_sql_auth_appends_uid_and_pwd(self):
         with patch("db.query.config") as mock_config:
@@ -594,7 +592,6 @@ _DATE_RANGES_PATTERN = re.compile(
 
 _VALID_AUTH_METHODS = {
     "active_directory_interactive",
-    "active_directory_default",
     "sql_auth",
     "service_principal",
 }
@@ -645,9 +642,6 @@ def _build_connection_string() -> str:
     if auth == "active_directory_interactive":
         return base + "Authentication=ActiveDirectoryInteractive;"
 
-    if auth == "active_directory_default":
-        return base + "Authentication=ActiveDirectoryDefault;"
-
     if auth == "sql_auth":
         username = _require_setting("AZURE_SQL_AUTH_USERNAME", config.AZURE_SQL_AUTH_USERNAME)
         password = _require_setting("AZURE_SQL_AUTH_PASSWORD", config.AZURE_SQL_AUTH_PASSWORD)
@@ -670,8 +664,6 @@ def _connect():
 
     if auth == "active_directory_interactive":
         logger.info("Connecting to database... (this may open a browser window for MFA)")
-    elif auth == "active_directory_default":
-        logger.info("Connecting to database... (using cached az login credential)")
     else:
         logger.info("Connecting to database...")
 
@@ -700,7 +692,7 @@ def execute_query(months: list[int], year: int) -> list[dict]:
         logger.error(f"Error: {e}")
         logger.error(
             "Suggestions: 1) Check your Azure permissions "
-            "2) Run 'az login' and try AUTH_METHOD=active_directory_default "
+            "2) Complete the browser MFA flow for interactive login "
             "3) Check IP whitelist in Azure portal"
         )
         raise ConnectionError(f"Failed to connect to database: {e}") from e
@@ -861,9 +853,6 @@ def build_connection_string(cfg, auth_method: str) -> str:
     if auth_method == "active_directory_interactive":
         return base + "Authentication=ActiveDirectoryInteractive;"
 
-    if auth_method == "active_directory_default":
-        return base + "Authentication=ActiveDirectoryDefault;"
-
     if auth_method == "sql_auth":
         return base + f"UID={cfg.AZURE_SQL_AUTH_USERNAME};PWD={cfg.AZURE_SQL_AUTH_PASSWORD};"
 
@@ -960,8 +949,6 @@ git commit -m "refactor: rewrite live test helpers for mssql-python"
 - Modify: `tests/db_auth/test_sql_auth.py:1-37` (full rewrite)
 - Modify: `tests/db_auth/test_service_principal.py:1-39` (full rewrite)
 - Create: `tests/db_auth/test_active_directory_interactive.py`
-- Create: `tests/db_auth/test_active_directory_default.py`
-
 Each test follows the same pattern: build connection string → connect → run `SELECT s.id FROM store AS s WHERE s.active = 1;` → assert rows.
 
 - [x] **Step 1: Rewrite tests/db_auth/test_sql_auth.py**
@@ -1053,39 +1040,7 @@ def test_active_directory_interactive(cfg):
     connect_and_verify(conn_str, timeout=min(cfg.DB_TIMEOUT, 60))
 ```
 
-- [x] **Step 4: Create tests/db_auth/test_active_directory_default.py**
-
-Create the file with:
-
-```python
-import pytest
-
-from tests.db_auth._helpers import (
-    build_connection_string,
-    connect_and_verify,
-    has_connection_string,
-    print_preflight,
-)
-
-pytestmark = pytest.mark.live
-
-
-@pytest.mark.skipif(
-    not has_connection_string(),
-    reason="AZURE_SQL_CONNECTIONSTRING not in .env",
-)
-def test_active_directory_default(cfg):
-    """Connect using Entra ID default credential (cached az login) and verify with active stores query.
-
-    Prerequisites: Run 'az login' before this test. The driver will use the cached credential.
-    """
-    print_preflight(cfg, "ActiveDirectoryDefault (cached az login)")
-    print("  >> Using cached credential from 'az login'...")
-    conn_str = build_connection_string(cfg, "active_directory_default")
-    connect_and_verify(conn_str, timeout=min(cfg.DB_TIMEOUT, 30))
-```
-
-- [x] **Step 5: Verify tests are collected (they'll be skipped without live creds)**
+- [x] **Step 4: Verify tests are collected (they'll be skipped without live creds)**
 
 Run:
 ```bash
@@ -1094,10 +1049,10 @@ uv run pytest tests/db_auth/ --collect-only 2>&1 | tail -20
 
 Expected: All 4 test files collected, tests shown as either `<Function test_...>` or marked for skip.
 
-- [x] **Step 6: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
-git add tests/db_auth/test_sql_auth.py tests/db_auth/test_service_principal.py tests/db_auth/test_active_directory_interactive.py tests/db_auth/test_active_directory_default.py
+git add tests/db_auth/test_sql_auth.py tests/db_auth/test_service_principal.py tests/db_auth/test_active_directory_interactive.py
 git commit -m "test: rewrite live auth tests for mssql-python with active stores verification"
 ```
 
@@ -1277,9 +1232,6 @@ With:
         if auth_method == "active_directory_interactive":
             log(">> Entra ID Interactive — a browser window may open for MFA")
             yield state(status="**Connecting to database...** MFA browser popup may appear.")
-        elif auth_method == "active_directory_default":
-            log(">> Entra ID Default — using cached 'az login' credential")
-            yield state(status="**Connecting to database...** Using cached az login credential.")
         elif auth_method == "sql_auth":
             log(f">> Using SQL Server authentication (user: {cfg.AZURE_SQL_AUTH_USERNAME})")
             yield state(status="**Connecting to database...** Using SQL username/password.")
@@ -1368,7 +1320,6 @@ With:
 ```markdown
    - Set `AUTH_METHOD` to match the credential type you actually have:
      - `active_directory_interactive` **(default, recommended)** — opens a browser window for Entra ID MFA login. Works on macOS, Windows, and Linux.
-     - `active_directory_default` — uses a cached credential from `az login`. Run `az login` once, then this method works silently without popups.
      - `sql_auth` — native SQL Server login via `AZURE_SQL_AUTH_USERNAME` and `AZURE_SQL_AUTH_PASSWORD`.
      - `service_principal` — app-only Entra token via `AZURE_CLIENT_ID` and `AZURE_CLIENT_SECRET`. For CI/production use.
 ```
@@ -1387,8 +1338,6 @@ With:
 
 ```markdown
 With `AUTH_METHOD=active_directory_interactive` (the default), a **browser window** will open for Entra ID MFA authentication. Complete the login and return to the app. This works on macOS, Windows, and Linux.
-
-To avoid the browser popup on each run, use `AUTH_METHOD=active_directory_default` after running `az login` once.
 ```
 
 - [x] **Step 4: Update Troubleshooting table (section 7)**
@@ -1400,7 +1349,6 @@ Replace the entire troubleshooting table with:
 |---|---|
 | "Connection failed" when querying the database | Check that you are on the office network or connected via VPN. Your IP must be whitelisted on the Azure SQL firewall. |
 | MFA browser window does not appear | Make sure `AUTH_METHOD=active_directory_interactive` is set. If the popup is blocked, try a different browser as default. |
-| `active_directory_default` fails | Run `az login` in your terminal first to cache your credential. Make sure Azure CLI is installed (`brew install azure-cli`). |
 | SQL auth says it cannot open the server requested by the login | `sql_auth` is only for native SQL Server logins. Use `AZURE_SQL_AUTH_USERNAME` / `AZURE_SQL_AUTH_PASSWORD` for that path. Do not use an email address there. |
 | Service principal auth fails | Confirm that `AZURE_CLIENT_ID` and `AZURE_CLIENT_SECRET` are correct, and the service principal is allowed to access Azure SQL. |
 | Google Drive permission error | Confirm that `credentials.json` is present in the project root and is valid. If the issue persists, delete `token.json` and re-run to go through the authorization flow again. |
@@ -1451,7 +1399,6 @@ Run specific auth methods or network diagnostics:
 ```bash
 uv run pytest tests/db_auth/test_network.py -m live -v -s
 uv run pytest tests/db_auth/test_active_directory_interactive.py -m live -v -s
-uv run pytest tests/db_auth/test_active_directory_default.py -m live -v -s
 uv run pytest tests/db_auth/test_sql_auth.py -m live -v -s
 uv run pytest tests/db_auth/test_service_principal.py -m live -v -s
 ```

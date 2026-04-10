@@ -67,9 +67,6 @@ def build_connection_string(cfg, auth_method: str) -> str:
     if auth_method == "active_directory_interactive":
         return base + "Authentication=ActiveDirectoryInteractive;"
 
-    if auth_method == "active_directory_default":
-        return base + "Authentication=ActiveDirectoryDefault;"
-
     if auth_method == "sql_auth":
         return base + f"UID={cfg.AZURE_SQL_AUTH_USERNAME};PWD={cfg.AZURE_SQL_AUTH_PASSWORD};"
 

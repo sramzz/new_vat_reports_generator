@@ -66,12 +66,12 @@ class TestBuildConnectionString:
         assert "Authentication=ActiveDirectoryInteractive;" in result
         assert BASE_CONN_STR in result
 
-    def test_active_directory_default(self):
+    def test_invalid_auth_method_is_unsupported(self):
         with patch("db.query.config") as mock_config:
             mock_config.AZURE_SQL_CONNECTIONSTRING = BASE_CONN_STR
-            mock_config.AUTH_METHOD = "active_directory_default"
-            result = _build_connection_string()
-        assert "Authentication=ActiveDirectoryDefault;" in result
+            mock_config.AUTH_METHOD = "unsupported_auth"
+            with pytest.raises(ValueError, match="Unsupported AUTH_METHOD"):
+                _build_connection_string()
 
     def test_sql_auth_appends_uid_and_pwd(self):
         with patch("db.query.config") as mock_config:
