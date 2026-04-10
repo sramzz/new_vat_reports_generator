@@ -1,6 +1,12 @@
+import os
 import re
 import pytest
 from unittest.mock import MagicMock, patch, call
+
+os.environ.setdefault("AZURE_SQL_CONNECTIONSTRING", "Server=test.database.windows.net;Database=testdb;Encrypt=yes;TrustServerCertificate=no;")
+os.environ.setdefault("GDRIVE_RAW_REPORT_FOLDER_ID", "test-raw-folder")
+os.environ.setdefault("GDRIVE_REPORTS_FOLDER_ID", "test-reports-folder")
+os.environ.setdefault("GDRIVE_SUMMARY_FOLDER_ID", "test-summary-folder")
 
 from db.query import (
     EXPECTED_COLUMNS,
