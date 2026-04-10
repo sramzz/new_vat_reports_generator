@@ -5,11 +5,23 @@ import pytest
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "..", "fixtures")
 
 
+def pytest_collection_modifyitems(config, items):
+    """Skip live tests unless explicitly requested with: pytest -m live"""
+    marker_expr = config.getoption("-m", default="")
+    if "live" in marker_expr:
+        return
+    skip_live = pytest.mark.skip(reason="live test — run with: uv run pytest -m live -v -s")
+    for item in items:
+        if "live" in item.keywords:
+            item.add_marker(skip_live)
+
+
 @pytest.fixture(autouse=True)
-def tmp_report_xlsx(tmp_path, monkeypatch):
-    """Ensure /tmp/report.xlsx and similar test paths exist for Drive upload tests."""
+def _patch_media_upload(request, monkeypatch):
+    """Patch MediaFileUpload for unit tests (skip for live tests that need real uploads)."""
+    if "live" in request.keywords:
+        return
     import unittest.mock
-    # Patch MediaFileUpload so it doesn't open a real file during unit tests
     monkeypatch.setattr(
         "drive.upload.MediaFileUpload",
         lambda path, **kwargs: unittest.mock.MagicMock(),

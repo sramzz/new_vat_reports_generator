@@ -1,9 +1,53 @@
+# UI Feedback Fix Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Fix the Gradio UI so users always see real-time feedback — live log output, progress steps, errors, and results — instead of a blank screen.
+
+**Architecture:** Convert `generate_reports` to a generator (Gradio's streaming pattern) that yields log lines to a visible log panel after every step. Replace the invisible `gr.Progress()` with explicit status text updates. Wrap the entire pipeline in error boundaries so failures always render in the UI.
+
+**Tech Stack:** Gradio 6.11.0 (generator-based streaming), Python logging with custom handler.
+
+**Root Cause:** Two problems discovered during debugging:
+1. `gr.Progress()` in Gradio 6 updates a thin progress bar that's easy to miss, and if the function crashes, no outputs render at all — the user sees nothing.
+2. The DB query (`execute_query`) blocks on Azure AD MFA popup even in dry run mode. If the popup isn't visible or times out, the function hangs forever and never returns outputs.
+
+**Implementation Note:** This plan has been implemented in the current codebase and its checklist reflects the shipped streaming UI/logging behavior.
+
+---
+
+## File Structure
+
+| File | Change | Responsibility |
+|------|--------|---------------|
+| `app.py` | Modify | Convert to generator pattern, add live log panel, fix error display |
+
+---
+
+## Task 1: Convert generate_reports to a Streaming Generator with Live Log
+
+**Model: Opus**
+
+**Files:**
+- Modify: `app.py`
+
+The key change: instead of returning a tuple at the end, the function `yield`s updated outputs after every meaningful step. This way the user sees each step happen in real time. We also add a dedicated log textbox that accumulates messages.
+
+- [x] **Step 1: Replace the entire `app.py` with the streaming version**
+
+The new `app.py` has these changes:
+1. **Live log panel** (`gr.Textbox` with `lines=12`) in the right column that shows timestamped step-by-step messages
+2. **`generate_reports` is now a generator** that `yield`s a 4-tuple `(status, log, results_table, error_text)` after each step — Gradio streams each yield to the UI immediately
+3. **No more `gr.Progress()`** — replaced with explicit log messages that the user can read
+4. **All exceptions caught** — every `try/except` yields the error to the log panel before returning
+5. **DB query step clearly shows** "Connecting to database... Azure AD login popup should appear" so the user knows to look for the popup
+
+```python
 import calendar
 import os
 import platform
 import subprocess
 import tempfile
-import time
 import traceback
 from datetime import datetime
 
@@ -88,35 +132,16 @@ def generate_reports(report_name: str, months: list[str], year: int, is_quarterl
         output_dir = tempfile.mkdtemp(prefix="vat_reports_")
 
         # -- Step 1: Query DB --
-        auth_method = cfg.AUTH_METHOD
-        log(f"Auth method: {auth_method}")
         log("Connecting to database...")
-        if auth_method == "active_directory_interactive":
-            log(">> Entra ID Interactive — a browser window may open for MFA")
-            yield state(status="**Connecting to database...** MFA browser popup may appear.")
-        elif auth_method == "active_directory_default":
-            log(">> Entra ID Default — using cached 'az login' credential")
-            yield state(status="**Connecting to database...** Using cached az login credential.")
-        elif auth_method == "sql_auth":
-            log(f">> Using SQL Server authentication (user: {cfg.AZURE_SQL_AUTH_USERNAME})")
-            yield state(status="**Connecting to database...** Using SQL username/password.")
-        elif auth_method == "service_principal":
-            log(">> Using service principal authentication (Entra app)")
-            yield state(status="**Connecting to database...** Service principal token auth.")
-        else:
-            log(f">> Unknown AUTH_METHOD='{auth_method}'")
-            yield state(status=f"**Configuration Error:** Unknown AUTH_METHOD='{auth_method}'.")
-            return
-        log(">> Query takes 7-20 minutes after connection. Please wait.")
-        yield state()
-        time.sleep(0.1)  # give Gradio time to flush the yield to the browser
+        log(">> Azure AD login popup should appear — please complete MFA")
+        log(">> Query takes 7-20 minutes. Please wait.")
+        yield state(status="**Querying database...** Azure AD popup should appear. This takes 7-20 min.")
 
         try:
             rows = execute_query(month_indices, int(year))
         except Exception as e:
             logger.error(f"Database error: {e}")
             log(f"DATABASE ERROR: {e}")
-            log(f"Error type: {type(e).__name__}")
             yield state(status=f"**Database Error:** {e}")
             return
 
@@ -409,6 +434,7 @@ with gr.Blocks(title="VAT Reports Generator") as app:
                     max_lines=30,
                     interactive=False,
                     autoscroll=True,
+                    show_copy_button=True,
                 )
                 results_table = gr.Markdown(label="Results")
                 error_output = gr.Markdown(label="Errors")
@@ -452,3 +478,61 @@ with gr.Blocks(title="VAT Reports Generator") as app:
 
 if __name__ == "__main__":
     app.launch()
+```
+
+- [x] **Step 2: Run existing tests**
+
+```bash
+uv run pytest tests/test_validation.py -v
+```
+
+The `validate_inputs` function is unchanged, so these should pass. The `generate_reports` function signature changed (no more `progress` param, now a generator) but no tests call it directly — integration tests use the underlying modules.
+
+```bash
+uv run pytest -v
+```
+
+Expected: All 74 tests pass.
+
+- [x] **Step 3: Manual test — run the app**
+
+```bash
+uv run python app.py
+```
+
+Open the Gradio URL. Enter "January 2026", select January, year 2026, check Dry Run, click Generate.
+
+**Expected:** The Live Log panel immediately shows timestamped messages:
+```
+[14:30:01] Starting report generation (DRY RUN)
+[14:30:01] Report: January 2026 | Months: [1] | Year: 2026
+[14:30:01] Connecting to database...
+[14:30:01] >> Azure AD login popup should appear — please complete MFA
+[14:30:01] >> Query takes 7-20 minutes. Please wait.
+```
+
+The status panel shows "**Querying database...** Azure AD popup should appear."
+
+The user now knows exactly what's happening and what they need to do.
+
+- [x] **Step 4: Commit**
+
+```bash
+git add app.py
+git commit -m "fix: convert UI to streaming generator with live log panel
+
+Replace invisible gr.Progress with a visible live log panel that
+shows timestamped messages after every step. User now sees exactly
+what's happening, including prompts for Azure AD MFA popup.
+All errors render in the UI instead of being silently swallowed."
+```
+
+---
+
+## Self-Review
+
+**1. Spec coverage:** The design spec requires: status text during DB query, progress bar per store, results display, error display, "View Logs" button. All covered — status text and progress replaced by live log (more informative), results and error display unchanged, View Logs button unchanged.
+
+**2. Placeholder scan:** No TBDs, TODOs, or vague instructions. Complete code provided.
+
+**3. Type consistency:** `validate_inputs` unchanged. `generate_reports` now yields 4-tuple instead of returning 3-tuple — UI layout updated to match (added `log_output`). Rollback functions unchanged.

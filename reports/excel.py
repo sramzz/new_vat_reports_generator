@@ -1,7 +1,10 @@
 import calendar
+import logging
 import os
 from collections import defaultdict
 from openpyxl import Workbook
+
+logger = logging.getLogger("vat_reports")
 
 REPORT_COLUMNS = [
     "CreatedOn", "RegisterName", "0%", "6%", "12%", "21%",
@@ -24,6 +27,7 @@ def _group_by_month(rows: list[dict]) -> dict[str, list[dict]]:
 def generate_store_report(rows: list[dict], report_name: str, store_name: str, output_dir: str) -> str:
     filename = f"{report_name} - VAT Accounting Report - {store_name}.xlsx"
     path = os.path.join(output_dir, filename)
+    logger.info(f"Generating store report: {filename} ({len(rows)} rows)")
     wb = Workbook()
     months = _group_by_month(rows)
     month_order = list(calendar.month_name)[1:]
@@ -36,14 +40,17 @@ def generate_store_report(rows: list[dict], report_name: str, store_name: str, o
             ws = wb.create_sheet(title=month_name)
         _write_sheet(ws, months[month_name])
     wb.save(path)
+    logger.info(f"Store report saved: {path} ({len(sorted_months)} sheets)")
     return path
 
 def generate_raw_backup(rows: list[dict], report_name: str, output_dir: str) -> str:
     filename = f"{report_name} - VAT Raw Report.xlsx"
     path = os.path.join(output_dir, filename)
+    logger.info(f"Generating raw backup: {filename} ({len(rows)} rows)")
     wb = Workbook()
     ws = wb.active
     ws.title = "Raw Data"
     _write_sheet(ws, rows)
     wb.save(path)
+    logger.info(f"Raw backup saved: {path}")
     return path

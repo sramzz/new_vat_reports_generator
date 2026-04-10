@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-04-10-pyodbc-to-mssql-python-migration-design.md`
 
+**Implementation Note:** Final implementation state is complete. `uv.lock` still contains `azure-identity` because it is a transitive dependency of `mssql-python`, and the original per-task red-phase/commit choreography was not followed literally.
+
 ---
 
 ## File Structure
@@ -44,7 +46,7 @@
 **Files:**
 - Modify: `pyproject.toml:7-16`
 
-- [ ] **Step 1: Replace pyodbc and azure-identity with mssql-python in pyproject.toml**
+- [x] **Step 1: Replace pyodbc and azure-identity with mssql-python in pyproject.toml**
 
 Open `pyproject.toml` and replace the dependencies list. Change lines 7-16 from:
 
@@ -75,7 +77,7 @@ dependencies = [
 ]
 ```
 
-- [ ] **Step 2: Lock and install the new dependencies**
+- [x] **Step 2: Lock and install the new dependencies**
 
 Run:
 ```bash
@@ -84,7 +86,7 @@ uv lock && uv sync --all-extras
 
 Expected: Lock file regenerated, mssql-python installed, pyodbc and azure-identity removed.
 
-- [ ] **Step 3: Verify mssql-python is importable**
+- [x] **Step 3: Verify mssql-python is importable**
 
 Run:
 ```bash
@@ -93,7 +95,7 @@ uv run python -c "import mssql_python; print('mssql-python OK')"
 
 Expected: `mssql-python OK`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add pyproject.toml uv.lock
@@ -107,7 +109,7 @@ git commit -m "chore: replace pyodbc and azure-identity with mssql-python"
 **Files:**
 - Modify: `config.py:1-18`
 
-- [ ] **Step 1: Rewrite the Azure SQL section of config.py**
+- [x] **Step 1: Rewrite the Azure SQL section of config.py**
 
 Replace the entire Azure SQL section (lines 6-18) of `config.py`. Keep lines 1-5 (imports and load_dotenv) and lines 20-36 (Google Drive, paths, OAuth) exactly as they are.
 
@@ -147,7 +149,7 @@ AZURE_CLIENT_ID = os.environ.get("AZURE_CLIENT_ID", "")
 AZURE_CLIENT_SECRET = os.environ.get("AZURE_CLIENT_SECRET", "")
 ```
 
-- [ ] **Step 2: Verify config loads without error (with a test .env)**
+- [x] **Step 2: Verify config loads without error (with a test .env)**
 
 Run:
 ```bash
@@ -160,7 +162,7 @@ AUTH_METHOD: active_directory_interactive
 TIMEOUT: 1800
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add config.py
@@ -174,7 +176,7 @@ git commit -m "refactor: simplify config.py — single connection string, new au
 **Files:**
 - Modify: `.env.example:1-28`
 
-- [ ] **Step 1: Replace .env.example with new format**
+- [x] **Step 1: Replace .env.example with new format**
 
 Replace the entire contents of `.env.example` with:
 
@@ -209,7 +211,7 @@ GDRIVE_SUMMARY_FOLDER_ID=your-summary-folder-id
 GDRIVE_TEST_FOLDER_ID=your-test-folder-id
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add .env.example
@@ -225,7 +227,7 @@ This is the TDD phase: write all the failing tests first, then implement in Task
 **Files:**
 - Modify: `tests/test_db_query.py:1-257` (full rewrite)
 
-- [ ] **Step 1: Write the complete test file**
+- [x] **Step 1: Write the complete test file**
 
 Replace the entire contents of `tests/test_db_query.py` with:
 
@@ -541,7 +543,7 @@ class TestLogging:
             assert "supersecret" not in record.message
 ```
 
-- [ ] **Step 2: Run the tests — verify they fail**
+- [x] **Step 2: Run the tests — verify they fail**
 
 Run:
 ```bash
@@ -550,7 +552,7 @@ uv run pytest tests/test_db_query.py -v 2>&1 | head -80
 
 Expected: All tests FAIL (ImportError or AttributeError because `db/query.py` still uses pyodbc and doesn't have `_build_connection_string`). This is correct — we haven't implemented yet.
 
-- [ ] **Step 3: Commit the failing tests**
+- [x] **Step 3: Commit the failing tests**
 
 ```bash
 git add tests/test_db_query.py
@@ -564,7 +566,7 @@ git commit -m "test: write failing unit tests for mssql-python migration (TDD re
 **Files:**
 - Modify: `db/query.py:1-187` (full rewrite)
 
-- [ ] **Step 1: Replace the entire contents of db/query.py**
+- [x] **Step 1: Replace the entire contents of db/query.py**
 
 Replace the full file with:
 
@@ -732,7 +734,7 @@ def execute_query(months: list[int], year: int) -> list[dict]:
         logger.info("Database connection closed")
 ```
 
-- [ ] **Step 2: Run the unit tests — verify they pass**
+- [x] **Step 2: Run the unit tests — verify they pass**
 
 Run:
 ```bash
@@ -741,7 +743,7 @@ uv run pytest tests/test_db_query.py -v
 
 Expected: All tests PASS. If any fail, fix the implementation to match the test contract, not the other way around.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add db/query.py
@@ -757,11 +759,11 @@ git commit -m "feat: rewrite db/query.py — mssql-python with 4 auth methods an
 
 The conftest currently has no pyodbc references, but verify it doesn't need changes. The `_patch_media_upload`, `sample_query_result`, `sample_store_mapping`, and `sample_last_run` fixtures are unrelated to the DB layer.
 
-- [ ] **Step 1: Verify conftest has no pyodbc references**
+- [x] **Step 1: Verify conftest has no pyodbc references**
 
 Read `tests/conftest.py`. It should not import or reference `pyodbc`. If it does, remove those references. Based on current state, no changes are needed.
 
-- [ ] **Step 2: Run the full test suite to verify nothing is broken**
+- [x] **Step 2: Run the full test suite to verify nothing is broken**
 
 Run:
 ```bash
@@ -770,7 +772,7 @@ uv run pytest tests/test_db_query.py tests/test_input_validation.py -v 2>&1 | ta
 
 Expected: All tests pass. No import errors.
 
-- [ ] **Step 3: Commit (only if changes were made)**
+- [x] **Step 3: Commit (only if changes were made)**
 
 ```bash
 git add tests/conftest.py
@@ -785,7 +787,7 @@ git commit -m "chore: verify conftest.py has no pyodbc references"
 - Modify: `tests/db_auth/_helpers.py:1-183` (full rewrite)
 - Modify: `tests/db_auth/conftest.py:1-8`
 
-- [ ] **Step 1: Replace tests/db_auth/_helpers.py**
+- [x] **Step 1: Replace tests/db_auth/_helpers.py**
 
 Replace the entire file with:
 
@@ -917,7 +919,7 @@ def probe_tls(server_host: str, port: int = 1433, timeout: float = 5.0) -> str:
             return subject.get("commonName", str(cert.get("subject", "unknown")))
 ```
 
-- [ ] **Step 2: Update tests/db_auth/conftest.py**
+- [x] **Step 2: Update tests/db_auth/conftest.py**
 
 Replace the entire file with:
 
@@ -934,7 +936,7 @@ def cfg():
 
 (This is the same content, but confirms it doesn't need changes.)
 
-- [ ] **Step 3: Verify the helpers module imports cleanly**
+- [x] **Step 3: Verify the helpers module imports cleanly**
 
 Run:
 ```bash
@@ -943,7 +945,7 @@ uv run python -c "from tests.db_auth._helpers import has_connection_string, has_
 
 Expected: `helpers OK`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add tests/db_auth/_helpers.py tests/db_auth/conftest.py
@@ -962,7 +964,7 @@ git commit -m "refactor: rewrite live test helpers for mssql-python"
 
 Each test follows the same pattern: build connection string → connect → run `SELECT s.id FROM store AS s WHERE s.active = 1;` → assert rows.
 
-- [ ] **Step 1: Rewrite tests/db_auth/test_sql_auth.py**
+- [x] **Step 1: Rewrite tests/db_auth/test_sql_auth.py**
 
 Replace the entire file with:
 
@@ -990,7 +992,7 @@ def test_sql_auth(cfg):
     connect_and_verify(conn_str, timeout=min(cfg.DB_TIMEOUT, 30))
 ```
 
-- [ ] **Step 2: Rewrite tests/db_auth/test_service_principal.py**
+- [x] **Step 2: Rewrite tests/db_auth/test_service_principal.py**
 
 Replace the entire file with:
 
@@ -1018,7 +1020,7 @@ def test_service_principal(cfg):
     connect_and_verify(conn_str, timeout=min(cfg.DB_TIMEOUT, 30))
 ```
 
-- [ ] **Step 3: Create tests/db_auth/test_active_directory_interactive.py**
+- [x] **Step 3: Create tests/db_auth/test_active_directory_interactive.py**
 
 Create the file with:
 
@@ -1051,7 +1053,7 @@ def test_active_directory_interactive(cfg):
     connect_and_verify(conn_str, timeout=min(cfg.DB_TIMEOUT, 60))
 ```
 
-- [ ] **Step 4: Create tests/db_auth/test_active_directory_default.py**
+- [x] **Step 4: Create tests/db_auth/test_active_directory_default.py**
 
 Create the file with:
 
@@ -1083,7 +1085,7 @@ def test_active_directory_default(cfg):
     connect_and_verify(conn_str, timeout=min(cfg.DB_TIMEOUT, 30))
 ```
 
-- [ ] **Step 5: Verify tests are collected (they'll be skipped without live creds)**
+- [x] **Step 5: Verify tests are collected (they'll be skipped without live creds)**
 
 Run:
 ```bash
@@ -1092,7 +1094,7 @@ uv run pytest tests/db_auth/ --collect-only 2>&1 | tail -20
 
 Expected: All 4 test files collected, tests shown as either `<Function test_...>` or marked for skip.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/db_auth/test_sql_auth.py tests/db_auth/test_service_principal.py tests/db_auth/test_active_directory_interactive.py tests/db_auth/test_active_directory_default.py
@@ -1106,7 +1108,7 @@ git commit -m "test: rewrite live auth tests for mssql-python with active stores
 **Files:**
 - Create: `tests/db_auth/test_network.py` (replaces test_driver_and_network.py)
 
-- [ ] **Step 1: Create tests/db_auth/test_network.py**
+- [x] **Step 1: Create tests/db_auth/test_network.py**
 
 Create the file with:
 
@@ -1179,7 +1181,7 @@ def test_tls_handshake(cfg):
         )
 ```
 
-- [ ] **Step 2: Verify test collection**
+- [x] **Step 2: Verify test collection**
 
 Run:
 ```bash
@@ -1188,7 +1190,7 @@ uv run pytest tests/db_auth/test_network.py --collect-only
 
 Expected: 3 tests collected.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/db_auth/test_network.py
@@ -1207,14 +1209,14 @@ git commit -m "test: add network reachability tests (DNS, TCP, TLS) for mssql-py
 - Delete: `tests/test_db_connection.py`
 - Delete: `tests/db_auth/README.md` (references old auth methods)
 
-- [ ] **Step 1: Delete all obsolete files**
+- [x] **Step 1: Delete all obsolete files**
 
 Run:
 ```bash
 git rm tests/db_auth/test_azure_ad_interactive.py tests/db_auth/test_azure_ad_password.py tests/db_auth/test_driver_and_network.py tests/db_auth/diagnose_db_auth.py tests/test_db_connection.py tests/db_auth/README.md
 ```
 
-- [ ] **Step 2: Verify no remaining pyodbc references in test files**
+- [x] **Step 2: Verify no remaining pyodbc references in test files**
 
 Run:
 ```bash
@@ -1223,7 +1225,7 @@ grep -r "pyodbc" tests/
 
 Expected: No matches. If any remain, fix them.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "chore: delete obsolete pyodbc test files and diagnostics"
@@ -1236,7 +1238,7 @@ git commit -m "chore: delete obsolete pyodbc test files and diagnostics"
 **Files:**
 - Modify: `app.py:90-113`
 
-- [ ] **Step 1: Replace the auth method display block in app.py**
+- [x] **Step 1: Replace the auth method display block in app.py**
 
 In `app.py`, replace lines 91-111 (the auth method if/elif/else block inside `generate_reports`) with the new auth methods:
 
@@ -1289,11 +1291,11 @@ With:
             yield state(status=f"**Configuration Error:** Unknown AUTH_METHOD='{auth_method}'.")
 ```
 
-- [ ] **Step 2: Remove the `platform` import if no longer used elsewhere**
+- [x] **Step 2: Remove the `platform` import if no longer used elsewhere**
 
 Check if `platform` is still used in `app.py`. It is — in `open_log_folder()` (line 287). So keep the import.
 
-- [ ] **Step 3: Verify the app module imports without error**
+- [x] **Step 3: Verify the app module imports without error**
 
 Run:
 ```bash
@@ -1302,7 +1304,7 @@ AZURE_SQL_CONNECTIONSTRING="Server=test;Database=test;" GDRIVE_RAW_REPORT_FOLDER
 
 Expected: `app.py OK`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add app.py
@@ -1316,7 +1318,7 @@ git commit -m "refactor: update app.py auth method display for mssql-python"
 **Files:**
 - Modify: `README.md`
 
-- [ ] **Step 1: Update Prerequisites section (section 2)**
+- [x] **Step 1: Update Prerequisites section (section 2)**
 
 Replace the Prerequisites section. Remove the ODBC Driver 18 bullet. Add `openssl` for macOS and Azure CLI for MFA.
 
@@ -1349,7 +1351,7 @@ Before setting up, make sure the following are in place:
 - **Network access** to the Azure SQL database — your office IP address must be whitelisted. If working remotely, connect via the office VPN first.
 ```
 
-- [ ] **Step 2: Update Setup section (section 3, step 3)**
+- [x] **Step 2: Update Setup section (section 3, step 3)**
 
 Replace the AUTH_METHOD description block. Replace:
 
@@ -1371,7 +1373,7 @@ With:
      - `service_principal` — app-only Entra token via `AZURE_CLIENT_ID` and `AZURE_CLIENT_SECRET`. For CI/production use.
 ```
 
-- [ ] **Step 3: Update Running the App section (section 4)**
+- [x] **Step 3: Update Running the App section (section 4)**
 
 Replace the two paragraphs after the run commands. Replace:
 
@@ -1389,7 +1391,7 @@ With `AUTH_METHOD=active_directory_interactive` (the default), a **browser windo
 To avoid the browser popup on each run, use `AUTH_METHOD=active_directory_default` after running `az login` once.
 ```
 
-- [ ] **Step 4: Update Troubleshooting table (section 7)**
+- [x] **Step 4: Update Troubleshooting table (section 7)**
 
 Replace the entire troubleshooting table with:
 
@@ -1405,7 +1407,7 @@ Replace the entire troubleshooting table with:
 | The query is taking a very long time | This is expected. Queries typically take 7 to 20 minutes depending on the date range selected. Do not close the browser or terminal. |
 ```
 
-- [ ] **Step 5: Update Running Tests section (section 8)**
+- [x] **Step 5: Update Running Tests section (section 8)**
 
 Replace the diagnostic commands block. Replace:
 
@@ -1455,7 +1457,7 @@ uv run pytest tests/db_auth/test_service_principal.py -m live -v -s
 ```
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add README.md
@@ -1466,7 +1468,7 @@ git commit -m "docs: update README for mssql-python migration — new auth metho
 
 ## Task 13: Final Verification (Opus)
 
-- [ ] **Step 1: Run full unit test suite**
+- [x] **Step 1: Run full unit test suite**
 
 Run:
 ```bash
@@ -1475,7 +1477,7 @@ uv run pytest --tb=short -v 2>&1 | tail -40
 
 Expected: All unit tests pass. No import errors. No pyodbc references.
 
-- [ ] **Step 2: Verify no pyodbc or azure-identity references remain in source code**
+- [x] **Step 2: Verify no pyodbc or azure-identity references remain in source code**
 
 Run:
 ```bash
@@ -1484,7 +1486,7 @@ grep -r "pyodbc\|azure.identity\|azure-identity\|ODBC Driver" --include="*.py" -
 
 Expected: No matches. If any remain, fix them.
 
-- [ ] **Step 3: Verify the app starts without error**
+- [x] **Step 3: Verify the app starts without error**
 
 Run:
 ```bash
@@ -1493,7 +1495,7 @@ AZURE_SQL_CONNECTIONSTRING="Server=test;Database=test;" GDRIVE_RAW_REPORT_FOLDER
 
 Expected: `Full app import OK`
 
-- [ ] **Step 4: Run coverage report**
+- [x] **Step 4: Run coverage report**
 
 Run:
 ```bash
@@ -1502,7 +1504,7 @@ uv run pytest --cov=db --cov-report=term-missing tests/test_db_query.py -v 2>&1 
 
 Expected: High coverage on `db/query.py`. All branches for auth methods and error handling covered.
 
-- [ ] **Step 5: Commit any final fixes**
+- [x] **Step 5: Commit any final fixes**
 
 If any issues were found in steps 1-4, fix them and commit:
 ```bash
