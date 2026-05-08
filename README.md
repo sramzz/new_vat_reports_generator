@@ -68,7 +68,7 @@ With `AUTH_METHOD=active_directory_interactive` (the default), a **browser windo
 7. Click **Generate**. The database query takes between **7 and 20 minutes** — this is normal. Do not close the browser tab while it is running.
 8. When complete, a table will appear with each store's name and a link to the uploaded Drive file.
 
-If the database query fails because JIT permission is missing, click **Clear Session**, obtain the database JIT permission, then run the report again. Clear Session only resets the current browser session; it does not delete uploaded files, rollback history, logs, or mappings.
+**If the query fails, it is usually a permissions issue.** Most query failures happen because Just-In-Time (JIT) authorization has not been activated in **PIM (Privileged Identity Management)** for the environment you are querying. Activate the JIT role in PIM, then click **Clear Session** in the app and run the report again. Clear Session only resets the current browser session — it does not delete uploaded files, rollback history, logs, or mappings.
 
 ### Dry run and upload after review
 
@@ -108,7 +108,7 @@ Use this tab to undo the most recent upload. You can either:
 | Problem | What to do |
 |---|---|
 | "Connection failed" when querying the database | Check that you are on the office network or connected via VPN. Your IP must be whitelisted on the Azure SQL firewall. |
-| "Database permission denied" or "EXECUTE permission was denied" | Click **Clear Session**, obtain the required JIT database permission, then run the report again. |
+| "Database permission denied", "EXECUTE permission was denied", or other auth errors when running the query | This is the most common cause of query failures. Activate the **JIT role in PIM** (Privileged Identity Management) for the target environment, click **Clear Session**, then run the report again. |
 | CSV import fails | Confirm the CSV includes `StoreId`, `CreatedOn`, `RegisterName`, VAT columns, and payment columns. The CSV must be a raw query result, not a per-store report. |
 | MFA browser window does not appear | Make sure `AUTH_METHOD=active_directory_interactive` is set. If the popup is blocked, try a different browser as default. |
 | SQL auth says it cannot open the server requested by the login | `sql_auth` is only for native SQL Server logins. Use `AZURE_SQL_AUTH_USERNAME` / `AZURE_SQL_AUTH_PASSWORD` for that path. Do not use an email address there. |
