@@ -25,6 +25,50 @@ _VALID_AUTH_METHODS = {
     "service_principal",
 }
 
+_STORE_CURSOR_FILTER_PATTERN = re.compile(
+    r"(WHERE\s+S\.\[Name\]\s+NOT\s+LIKE\s+'%test%')",
+    re.IGNORECASE,
+)
+
+
+class DatabasePermissionError(ConnectionError):
+    """Raised when the database rejects a query because JIT permission is missing."""
+
+
+def _is_permission_error(error: Exception) -> bool:
+    message = str(error).lower()
+    return (
+        "execute permission" in message
+        or "permission was denied" in message
+        or "access denied" in message
+    )
+
+
+def _normalize_store_ids(store_ids: list[int | str] | None) -> list[int] | None:
+    if store_ids is None:
+        return None
+    return sorted({int(store_id) for store_id in store_ids})
+
+
+def _inject_store_filter(sql: str, store_ids: list[int | str] | None) -> str:
+    normalized = _normalize_store_ids(store_ids)
+    if normalized is None:
+        return sql
+
+    filter_sql = "AND 1 = 0" if not normalized else f"AND S.Id IN ({', '.join(str(store_id) for store_id in normalized)})"
+    replacement = rf"\1\n    {filter_sql}"
+    filtered_sql, count = _STORE_CURSOR_FILTER_PATTERN.subn(replacement, sql, count=1)
+    if count != 1:
+        raise ValueError("Could not inject store filter into SQL template.")
+    return filtered_sql
+
+
+def _raise_permission_error(error: Exception) -> None:
+    raise DatabasePermissionError(
+        "Database permission denied. Clear this session, obtain JIT permission for "
+        f"the database, then run again. Details: {error}"
+    ) from error
+
 
 def build_date_ranges_sql(months: list[int], year: int) -> str:
     lines = []
@@ -102,14 +146,15 @@ def _connect():
     return conn
 
 
-def execute_query(months: list[int], year: int) -> list[dict]:
-    logger.info(f"execute_query called: months={months}, year={year}")
+def execute_query(months: list[int], year: int, store_ids: list[int | str] | None = None) -> list[dict]:
+    logger.info(f"execute_query called: months={months}, year={year}, store_ids={store_ids}")
     logger.info(f"Using auth method: {config.AUTH_METHOD}")
 
     logger.info(f"Loading SQL template from {config.SQL_TEMPLATE_PATH}")
     template = _read_sql_template()
     new_insert = build_date_ranges_sql(months, year)
     sql = _DATE_RANGES_PATTERN.sub(new_insert, template)
+    sql = _inject_store_filter(sql, store_ids)
     logger.info("SQL template prepared with date ranges injected")
 
     try:
@@ -150,7 +195,40 @@ def execute_query(months: list[int], year: int) -> list[dict]:
                 "3) Try fewer months at once"
             )
             raise TimeoutError(f"Database query timed out: {e}") from e
+        if _is_permission_error(e):
+            logger.error(f"Database query failed because permission is missing: {e}")
+            _raise_permission_error(e)
         logger.error(f"Database query failed: {e}")
         raise ConnectionError(f"Database query failed: {e}") from e
+    finally:
+        logger.info("Database connection closed")
+
+
+def fetch_stores() -> list[dict]:
+    logger.info("Fetching store list from database")
+    try:
+        conn = _connect()
+    except ValueError as e:
+        logger.error(f"Database auth configuration failed: {e}")
+        raise ConnectionError(f"Failed to connect to database: {e}") from e
+    except Exception as e:
+        if _is_permission_error(e):
+            _raise_permission_error(e)
+        logger.error(f"Database connection failed using auth method '{config.AUTH_METHOD}'")
+        raise ConnectionError(f"Failed to connect to database: {e}") from e
+
+    try:
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute("select s.id, s.name from store as s order by s.name")
+            stores = [{"id": int(row[0]), "name": str(row[1])} for row in cursor.fetchall()]
+            logger.info(f"Fetched {len(stores)} stores from database")
+            return stores
+    except Exception as e:
+        if _is_permission_error(e):
+            logger.error(f"Store list query failed because permission is missing: {e}")
+            _raise_permission_error(e)
+        logger.error(f"Store list query failed: {e}")
+        raise ConnectionError(f"Store list query failed: {e}") from e
     finally:
         logger.info("Database connection closed")

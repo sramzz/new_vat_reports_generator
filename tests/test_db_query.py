@@ -9,9 +9,11 @@ os.environ.setdefault("GDRIVE_REPORTS_FOLDER_ID", "test-reports-folder")
 os.environ.setdefault("GDRIVE_SUMMARY_FOLDER_ID", "test-summary-folder")
 
 from db.query import (
+    DatabasePermissionError,
     EXPECTED_COLUMNS,
     build_date_ranges_sql,
     execute_query,
+    fetch_stores,
     _build_connection_string,
     _connect,
 )
@@ -25,6 +27,23 @@ VALUES
     (N'2025-04-01', N'2025-05-01'),
     (N'2025-05-01', N'2025-06-01'),
     (N'2025-06-01', N'2025-07-01');
+
+SELECT CreatedOn, StoreId, RegisterName FROM #FinalResult;"""
+
+STORE_CURSOR_SQL_TEMPLATE = """DROP TABLE IF EXISTS #DateRanges;
+CREATE TABLE #DateRanges (StartDate DATE, EndDate DATE);
+
+INSERT INTO #DateRanges (StartDate, EndDate)
+VALUES
+    (N'2025-04-01', N'2025-05-01');
+
+DECLARE store_cursor CURSOR
+FOR
+    SELECT
+        S.Id, S.[Name]
+    FROM dbo.[Store] as S
+    WHERE S.[Name] NOT LIKE '%test%'
+    ORDER BY S.[Name];
 
 SELECT CreatedOn, StoreId, RegisterName FROM #FinalResult;"""
 
@@ -229,6 +248,47 @@ class TestExecuteQuery:
             result = _read_sql_template()
         assert result == sql_content
 
+    def test_selected_store_ids_are_injected_into_store_cursor(self):
+        mock_conn = self._mock_conn_with_rows([])
+        with patch("db.query._read_sql_template", return_value=STORE_CURSOR_SQL_TEMPLATE), \
+             patch("db.query._connect", return_value=mock_conn):
+            execute_query([4], 2026, store_ids=[217, "218"])
+        executed_sql = mock_conn.cursor.return_value.execute.call_args.args[0]
+        assert "AND S.Id IN (217, 218)" in executed_sql
+
+    def test_none_store_ids_keeps_all_store_query(self):
+        mock_conn = self._mock_conn_with_rows([])
+        with patch("db.query._read_sql_template", return_value=STORE_CURSOR_SQL_TEMPLATE), \
+             patch("db.query._connect", return_value=mock_conn):
+            execute_query([4], 2026, store_ids=None)
+        executed_sql = mock_conn.cursor.return_value.execute.call_args.args[0]
+        assert "S.Id IN" not in executed_sql
+
+
+class TestFetchStores:
+    def test_fetch_stores_returns_normalized_store_records(self):
+        mock_cursor = MagicMock()
+        mock_cursor.description = [
+            ("id", None, None, None, None, None, None),
+            ("name", None, None, None, None, None, None),
+        ]
+        mock_cursor.fetchall.return_value = [(217, "Belchicken Aalst"), (218, "Belchicken Ruisbroek")]
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_conn.__enter__ = MagicMock(return_value=mock_conn)
+        mock_conn.__exit__ = MagicMock(return_value=False)
+
+        with patch("db.query._connect", return_value=mock_conn):
+            result = fetch_stores()
+
+        assert result == [
+            {"id": 217, "name": "Belchicken Aalst"},
+            {"id": 218, "name": "Belchicken Ruisbroek"},
+        ]
+        mock_cursor.execute.assert_called_once_with(
+            "select s.id, s.name from store as s order by s.name"
+        )
+
 
 # ── Error Handling ──────────────────────────────────────────────────────────
 
@@ -262,6 +322,20 @@ class TestErrorHandling:
         with patch("db.query._read_sql_template", return_value=SQL_TEMPLATE), \
              patch("db.query._connect", return_value=mock_conn):
             with pytest.raises(ConnectionError, match="query failed"):
+                execute_query([1], 2026)
+
+    def test_execute_permission_error_raises_jit_permission_error(self):
+        mock_cursor = MagicMock()
+        mock_cursor.execute.side_effect = Exception(
+            "The EXECUTE permission was denied on the object 'GetCashbookReport'"
+        )
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_conn.__enter__ = MagicMock(return_value=mock_conn)
+        mock_conn.__exit__ = MagicMock(return_value=False)
+        with patch("db.query._read_sql_template", return_value=SQL_TEMPLATE), \
+             patch("db.query._connect", return_value=mock_conn):
+            with pytest.raises(DatabasePermissionError, match="JIT permission"):
                 execute_query([1], 2026)
 
     def test_connection_closed_even_on_error(self):

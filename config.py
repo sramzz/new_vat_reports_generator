@@ -24,10 +24,14 @@ GDRIVE_SUMMARY_FOLDER_ID = os.environ["GDRIVE_SUMMARY_FOLDER_ID"]
 GDRIVE_TEST_FOLDER_ID = os.environ.get("GDRIVE_TEST_FOLDER_ID", "")
 
 # Paths
+BASE_DIR = os.path.dirname(__file__)
 STORE_MAPPING_PATH = os.path.join(os.path.dirname(__file__), "data", "store_mapping.json")
+STORE_CACHE_PATH = os.path.join(os.path.dirname(__file__), "data", "stores_cache.json")
 LAST_RUN_PATH = os.path.join(os.path.dirname(__file__), "data", "last_run.json")
 SQL_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), "db", "SQL_Query.sql")
-LOG_PATH = os.path.join(os.path.dirname(__file__), "run.log")
+LOG_DIR = os.path.join(BASE_DIR, "logs")
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
+LOG_PATH = os.path.join(LOG_DIR, "run.log")
 
 # Google OAuth
 GOOGLE_SCOPES = ["https://www.googleapis.com/auth/drive"]

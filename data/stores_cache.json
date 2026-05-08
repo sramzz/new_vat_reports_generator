@@ -1,0 +1,209 @@
+{
+    "updated_at": "2026-05-08T13:27:52",
+    "stores": [
+        {
+            "id": 266,
+            "name": "Belchicken A12 Drive"
+        },
+        {
+            "id": 217,
+            "name": "Belchicken Aalst"
+        },
+        {
+            "id": 265,
+            "name": "Belchicken Aartselaar"
+        },
+        {
+            "id": 224,
+            "name": "Belchicken Asse"
+        },
+        {
+            "id": 247,
+            "name": "Belchicken Astridplein"
+        },
+        {
+            "id": 261,
+            "name": "Belchicken Ath"
+        },
+        {
+            "id": 219,
+            "name": "Belchicken Basilix Shopping"
+        },
+        {
+            "id": 221,
+            "name": "Belchicken Brugge"
+        },
+        {
+            "id": 236,
+            "name": "Belchicken Brugge Zuidzandstraat"
+        },
+        {
+            "id": 222,
+            "name": "Belchicken City2 Shopping Center"
+        },
+        {
+            "id": 226,
+            "name": "Belchicken Diest"
+        },
+        {
+            "id": 227,
+            "name": "Belchicken Docks"
+        },
+        {
+            "id": 228,
+            "name": "Belchicken Etterbeek"
+        },
+        {
+            "id": 229,
+            "name": "Belchicken Geraardsbergen"
+        },
+        {
+            "id": 230,
+            "name": "Belchicken Halle"
+        },
+        {
+            "id": 231,
+            "name": "Belchicken Hasselt"
+        },
+        {
+            "id": 232,
+            "name": "Belchicken Heist"
+        },
+        {
+            "id": 233,
+            "name": "Belchicken Hoboken"
+        },
+        {
+            "id": 258,
+            "name": "Belchicken Houba"
+        },
+        {
+            "id": 234,
+            "name": "Belchicken Ixelles"
+        },
+        {
+            "id": 237,
+            "name": "Belchicken Jette"
+        },
+        {
+            "id": 223,
+            "name": "Belchicken Kraainem"
+        },
+        {
+            "id": 260,
+            "name": "Belchicken Lab Test"
+        },
+        {
+            "id": 235,
+            "name": "Belchicken Leuven"
+        },
+        {
+            "id": 263,
+            "name": "Belchicken Lier"
+        },
+        {
+            "id": 220,
+            "name": "Belchicken Maastricht"
+        },
+        {
+            "id": 238,
+            "name": "Belchicken Mechelen"
+        },
+        {
+            "id": 239,
+            "name": "Belchicken Mediacite"
+        },
+        {
+            "id": 240,
+            "name": "Belchicken Meir"
+        },
+        {
+            "id": 225,
+            "name": "Belchicken Merksem"
+        },
+        {
+            "id": 241,
+            "name": "Belchicken Molenbeek"
+        },
+        {
+            "id": 242,
+            "name": "Belchicken Mons"
+        },
+        {
+            "id": 267,
+            "name": "Belchicken NL Test"
+        },
+        {
+            "id": 243,
+            "name": "Belchicken Oostende"
+        },
+        {
+            "id": 264,
+            "name": "Belchicken Overpoort"
+        },
+        {
+            "id": 245,
+            "name": "Belchicken Rive Gauche"
+        },
+        {
+            "id": 246,
+            "name": "Belchicken Roeselare"
+        },
+        {
+            "id": 248,
+            "name": "Belchicken Rue Neuve"
+        },
+        {
+            "id": 218,
+            "name": "Belchicken Ruisbroek"
+        },
+        {
+            "id": 249,
+            "name": "Belchicken Schaarbeek"
+        },
+        {
+            "id": 259,
+            "name": "Belchicken Test Store"
+        },
+        {
+            "id": 250,
+            "name": "Belchicken Uccle"
+        },
+        {
+            "id": 253,
+            "name": "Belchicken Uccle De Bue"
+        },
+        {
+            "id": 251,
+            "name": "Belchicken Verviers"
+        },
+        {
+            "id": 252,
+            "name": "Belchicken Vilvoorde"
+        },
+        {
+            "id": 254,
+            "name": "Belchicken Waterloo"
+        },
+        {
+            "id": 255,
+            "name": "Belchicken Wavre"
+        },
+        {
+            "id": 256,
+            "name": "Belchicken Westland"
+        },
+        {
+            "id": 262,
+            "name": "Belchicken Wetteren"
+        },
+        {
+            "id": 244,
+            "name": "Belchicken Wijnegem"
+        },
+        {
+            "id": 257,
+            "name": "Belchicken Zaventem"
+        }
+    ]
+}

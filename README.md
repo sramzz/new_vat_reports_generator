@@ -61,8 +61,14 @@ With `AUTH_METHOD=active_directory_interactive` (the default), a **browser windo
 2. Select the **months** to include in the report.
 3. Choose the report mode: **monthly** (one file per store per month) or **quarterly** (one combined file per store).
 4. Optionally check **Dry Run** to test the process without uploading anything to Drive.
-5. Click **Generate**. The database query takes between **7 and 20 minutes** — this is normal. Do not close the browser tab while it is running.
-6. When complete, a table will appear with each store's name and a link to the uploaded Drive file.
+5. Choose the data source:
+   - **Query database** — the app connects to Azure SQL and runs the VAT query.
+   - **Import CSV** — upload a raw query-result CSV that already includes `StoreId`.
+6. Use **Refresh Stores** when you want to update the cached store list from the database. The store selector defaults to all cached stores.
+7. Click **Generate**. The database query takes between **7 and 20 minutes** — this is normal. Do not close the browser tab while it is running.
+8. When complete, a table will appear with each store's name and a link to the uploaded Drive file.
+
+If the database query fails because JIT permission is missing, click **Clear Session**, obtain the database JIT permission, then run the report again. Clear Session only resets the current browser session; it does not delete uploaded files, rollback history, logs, or mappings.
 
 ### Rollback tab
 
@@ -75,6 +81,8 @@ Use this tab to undo the most recent upload. You can either:
 ## 6. Maintenance
 
 - **`data/store_mapping.json`** — Maps store identifiers from the database to their Google Drive folder names. New stores are detected automatically and added to this file. You can manually edit the folder name for any store if needed.
+
+- **`data/stores_cache.json`** — Caches the store list used by the Generate Reports store selector. It is updated by clicking **Refresh Stores** in the UI.
 
 - **`db/SQL_Query.sql`** — The SQL query sent to the Azure database. If the database column structure changes, this file may need to be updated accordingly.
 
@@ -92,6 +100,8 @@ Use this tab to undo the most recent upload. You can either:
 | Problem | What to do |
 |---|---|
 | "Connection failed" when querying the database | Check that you are on the office network or connected via VPN. Your IP must be whitelisted on the Azure SQL firewall. |
+| "Database permission denied" or "EXECUTE permission was denied" | Click **Clear Session**, obtain the required JIT database permission, then run the report again. |
+| CSV import fails | Confirm the CSV includes `StoreId`, `CreatedOn`, `RegisterName`, VAT columns, and payment columns. The CSV must be a raw query result, not a per-store report. |
 | MFA browser window does not appear | Make sure `AUTH_METHOD=active_directory_interactive` is set. If the popup is blocked, try a different browser as default. |
 | SQL auth says it cannot open the server requested by the login | `sql_auth` is only for native SQL Server logins. Use `AZURE_SQL_AUTH_USERNAME` / `AZURE_SQL_AUTH_PASSWORD` for that path. Do not use an email address there. |
 | Service principal auth fails | Confirm that `AZURE_CLIENT_ID` and `AZURE_CLIENT_SECRET` are correct, and the service principal is allowed to access Azure SQL. |
