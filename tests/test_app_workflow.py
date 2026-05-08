@@ -1,8 +1,9 @@
 from datetime import datetime
+import json
 import logging
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import app as vat_app
 
@@ -198,6 +199,15 @@ def test_generate_reports_dry_run_status_names_temp_output_directory(monkeypatch
     assert f"Dry-run local files were generated here: `{tmp_path}`" in final_status
     assert f"[Open dry-run folder]({Path(tmp_path).as_uri()})" in final_status
     assert vat_app._get_latest_dry_run_dir() == str(tmp_path)
+    manifest = vat_app._get_latest_dry_run_manifest()
+    assert manifest["report_name"] == "Q2 2026"
+    assert manifest["output_dir"] == str(tmp_path)
+    assert manifest["raw_path"] == str(tmp_path / "Q2 2026 - VAT Raw Report.xlsx")
+    assert manifest["summary_path"] == str(tmp_path / "Q2 2026 - VAT Summary Report.xlsx")
+    assert manifest["stores"][0]["store_name"] == "Belchicken A12 Drive"
+    assert manifest["stores"][0]["report_path"] == str(
+        tmp_path / "Q2 2026 - VAT Accounting Report - Belchicken A12 Drive.xlsx"
+    )
 
 
 def test_open_last_dry_run_folder_reports_missing_folder(monkeypatch):
@@ -228,3 +238,156 @@ def test_open_log_folder_uses_log_dir(monkeypatch, tmp_path):
 
     assert result == "Log folder opened."
     assert popen_calls == [["open", str(tmp_path / "logs")]]
+
+
+def test_upload_last_dry_run_requires_manifest():
+    vat_app._clear_latest_dry_run_manifest()
+
+    status, log, results, errors = vat_app.upload_last_dry_run_to_drive(confirm=False)
+
+    assert status == "**No dry-run results available to upload.**"
+    assert log == ""
+    assert results == ""
+    assert errors == ""
+
+
+def test_upload_last_dry_run_requires_confirmation(monkeypatch, tmp_path):
+    vat_app._set_latest_dry_run_manifest({
+        "report_name": "Q2 2026",
+        "output_dir": str(tmp_path),
+        "raw_path": str(tmp_path / "raw.xlsx"),
+        "summary_path": str(tmp_path / "summary.xlsx"),
+        "stores": [],
+    })
+
+    with patch("drive.auth.get_drive_service") as get_drive_service:
+        status, log, results, errors = vat_app.upload_last_dry_run_to_drive(confirm=False)
+
+    get_drive_service.assert_not_called()
+    assert status == "**Validation Error:** Check the confirmation box before uploading dry-run results."
+    assert log == {"__type__": "update"}
+    assert results == {"__type__": "update"}
+    assert errors == {"__type__": "update"}
+
+
+def test_upload_last_dry_run_uploads_manifest_and_updates_last_run(monkeypatch, tmp_path):
+    raw_path = tmp_path / "raw.xlsx"
+    store_path = tmp_path / "store.xlsx"
+    summary_path = tmp_path / "summary.xlsx"
+    for path in [raw_path, store_path, summary_path]:
+        path.write_text("xlsx", encoding="utf-8")
+    last_run_path = tmp_path / "last_run.json"
+    mapping_path = tmp_path / "store_mapping.json"
+    mapping_path.write_text(json.dumps({"stores": [{"storeId": 217, "gdriveId": "store-folder"}]}), encoding="utf-8")
+    summary_url = "https://drive.google.com/file/d/summary/view"
+
+    vat_app._set_latest_dry_run_manifest({
+        "report_name": "Q2 2026",
+        "output_dir": str(tmp_path),
+        "raw_path": str(raw_path),
+        "summary_path": str(summary_path),
+        "stores": [
+            {
+                "store_id": 217,
+                "store_name": "Belchicken Aalst",
+                "report_path": str(store_path),
+                "folder_id": "store-folder",
+                "is_new_store": False,
+            }
+        ],
+    })
+    monkeypatch.setattr(vat_app, "_get_logger", lambda: logging.getLogger("vat_reports_test"))
+    monkeypatch.setattr(
+        vat_app,
+        "_get_config",
+        lambda: SimpleNamespace(
+            STORE_MAPPING_PATH=str(tmp_path / "store_mapping.json"),
+            LAST_RUN_PATH=str(last_run_path),
+            GDRIVE_RAW_REPORT_FOLDER_ID="raw-folder",
+            GDRIVE_REPORTS_FOLDER_ID="reports-folder",
+            GDRIVE_SUMMARY_FOLDER_ID="summary-folder",
+        ),
+    )
+
+    uploaded = []
+
+    def fake_upload_file(service, local_path, parent_folder_id):
+        uploaded.append((local_path, parent_folder_id))
+        if parent_folder_id == "summary-folder":
+            return "summary-id", summary_url
+        if parent_folder_id == "raw-folder":
+            return "raw-id", "https://drive.google.com/file/d/raw/view"
+        return "store-id", "https://drive.google.com/file/d/store/view"
+
+    with (
+        patch("drive.auth.get_drive_service", return_value=object()),
+        patch("drive.upload.upload_file", side_effect=fake_upload_file),
+        patch("reports.summary.generate_summary", return_value=str(summary_path)) as generate_summary,
+    ):
+        status, log, results, errors = vat_app.upload_last_dry_run_to_drive(confirm=True)
+
+    assert uploaded == [
+        (str(raw_path), "raw-folder"),
+        (str(store_path), "store-folder"),
+        (str(summary_path), "summary-folder"),
+    ]
+    generate_summary.assert_called_once()
+    assert f"[Open summary report]({summary_url})" in status
+    assert "https://drive.google.com/file/d/store/view" in results
+    assert f"Summary uploaded. Click here: {summary_url}" in log
+    assert errors == ""
+    last_run = json.loads(last_run_path.read_text(encoding="utf-8"))
+    assert [entry["type"] for entry in last_run["files"]] == ["raw_backup", "report", "summary"]
+
+
+def test_upload_last_dry_run_creates_new_store_folder_and_updates_mapping(monkeypatch, tmp_path):
+    raw_path = tmp_path / "raw.xlsx"
+    store_path = tmp_path / "store.xlsx"
+    summary_path = tmp_path / "summary.xlsx"
+    mapping_path = tmp_path / "store_mapping.json"
+    mapping_path.write_text(json.dumps({"stores": []}), encoding="utf-8")
+    for path in [raw_path, store_path, summary_path]:
+        path.write_text("xlsx", encoding="utf-8")
+
+    vat_app._set_latest_dry_run_manifest({
+        "report_name": "Q2 2026",
+        "output_dir": str(tmp_path),
+        "raw_path": str(raw_path),
+        "summary_path": str(summary_path),
+        "stores": [
+            {
+                "store_id": 999,
+                "store_name": "Belchicken New",
+                "report_path": str(store_path),
+                "folder_id": None,
+                "is_new_store": True,
+            }
+        ],
+    })
+    monkeypatch.setattr(vat_app, "_get_logger", lambda: logging.getLogger("vat_reports_test"))
+    monkeypatch.setattr(
+        vat_app,
+        "_get_config",
+        lambda: SimpleNamespace(
+            STORE_MAPPING_PATH=str(mapping_path),
+            LAST_RUN_PATH=str(tmp_path / "last_run.json"),
+            GDRIVE_RAW_REPORT_FOLDER_ID="raw-folder",
+            GDRIVE_REPORTS_FOLDER_ID="reports-folder",
+            GDRIVE_SUMMARY_FOLDER_ID="summary-folder",
+        ),
+    )
+
+    with (
+        patch("drive.auth.get_drive_service", return_value=object()),
+        patch("drive.upload.upload_file", return_value=("file-id", "https://drive.google.com/file/d/file/view")),
+        patch("drive.upload.create_folder", return_value="new-folder") as create_folder,
+        patch("reports.summary.generate_summary", return_value=str(summary_path)),
+    ):
+        status, log, results, errors = vat_app.upload_last_dry_run_to_drive(confirm=True)
+
+    create_folder.assert_called_once_with(ANY, "Belchicken New", "reports-folder")
+    mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
+    assert mapping["stores"][0]["storeId"] == 999
+    assert mapping["stores"][0]["gdriveId"] == "new-folder"
+    assert "Uploaded to Google Drive" in status
+    assert errors == ""

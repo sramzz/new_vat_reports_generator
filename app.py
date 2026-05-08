@@ -18,6 +18,8 @@ _QUERY_STATUS_LOCK = threading.Lock()
 _QUERY_STATUS = None
 _LATEST_DRY_RUN_DIR_LOCK = threading.Lock()
 _LATEST_DRY_RUN_DIR = None
+_LATEST_DRY_RUN_MANIFEST_LOCK = threading.Lock()
+_LATEST_DRY_RUN_MANIFEST = None
 
 
 def _get_config():
@@ -79,6 +81,31 @@ def _clear_latest_dry_run_dir() -> None:
     global _LATEST_DRY_RUN_DIR
     with _LATEST_DRY_RUN_DIR_LOCK:
         _LATEST_DRY_RUN_DIR = None
+
+
+def _set_latest_dry_run_manifest(manifest: dict) -> None:
+    global _LATEST_DRY_RUN_MANIFEST
+    with _LATEST_DRY_RUN_MANIFEST_LOCK:
+        _LATEST_DRY_RUN_MANIFEST = {
+            **manifest,
+            "stores": [dict(store) for store in manifest.get("stores", [])],
+        }
+
+
+def _get_latest_dry_run_manifest() -> dict | None:
+    with _LATEST_DRY_RUN_MANIFEST_LOCK:
+        if _LATEST_DRY_RUN_MANIFEST is None:
+            return None
+        return {
+            **_LATEST_DRY_RUN_MANIFEST,
+            "stores": [dict(store) for store in _LATEST_DRY_RUN_MANIFEST.get("stores", [])],
+        }
+
+
+def _clear_latest_dry_run_manifest() -> None:
+    global _LATEST_DRY_RUN_MANIFEST
+    with _LATEST_DRY_RUN_MANIFEST_LOCK:
+        _LATEST_DRY_RUN_MANIFEST = None
 
 
 def _folder_uri(path: str) -> str:
@@ -380,14 +407,12 @@ def generate_reports(
         logger.info(f"Raw backup generated: {raw_path}")
         log(f"Raw backup saved: {os.path.basename(raw_path)}")
 
-        # Initialize last_run
-        save_last_run(cfg.LAST_RUN_PATH, {
-            "report_name": report_name,
-            "created_at": datetime.now().isoformat(),
-            "files": [],
-        })
-
         if not dry_run:
+            save_last_run(cfg.LAST_RUN_PATH, {
+                "report_name": report_name,
+                "created_at": datetime.now().isoformat(),
+                "files": [],
+            })
             log("Uploading raw backup to Google Drive...")
             yield state(status="**Uploading raw backup...**")
             try:
@@ -460,7 +485,14 @@ def generate_reports(
                     log(f"  ERROR uploading: {e}")
                     continue
 
-            store_results.append({"store_id": store_id, "store_name": store_name, "report_url": report_url})
+            store_results.append({
+                "store_id": store_id,
+                "store_name": store_name,
+                "report_url": report_url,
+                "report_path": report_path,
+                "folder_id": folder_id,
+                "is_new_store": store_name in new_stores,
+            })
 
         # -- Step 7: Summary --
         log("Generating summary report...")
@@ -489,6 +521,22 @@ def generate_reports(
             result_lines.append(f"\n**Summary Report:** [Open summary report]({summary_url})")
         if dry_run:
             _set_latest_dry_run_dir(output_dir)
+            _set_latest_dry_run_manifest({
+                "report_name": report_name,
+                "output_dir": output_dir,
+                "raw_path": raw_path,
+                "summary_path": summary_path,
+                "stores": [
+                    {
+                        "store_id": result["store_id"],
+                        "store_name": result["store_name"],
+                        "report_path": result["report_path"],
+                        "folder_id": result["folder_id"],
+                        "is_new_store": result["is_new_store"],
+                    }
+                    for result in store_results
+                ],
+            })
             result_lines.insert(0, "**DRY RUN** — No files were uploaded to Google Drive.\n")
             result_lines.append(f"\nDry-run local files were generated here: `{output_dir}`")
             result_lines.append(f"\n[Open dry-run folder]({_folder_uri(output_dir)})")
@@ -530,6 +578,124 @@ def open_last_dry_run_folder():
         return "No dry-run folder available yet."
     _open_folder(latest_dir)
     return f"Opened dry-run folder: {latest_dir}"
+
+
+def upload_last_dry_run_to_drive(confirm: bool):
+    manifest = _get_latest_dry_run_manifest()
+    if manifest is None:
+        return "**No dry-run results available to upload.**", "", "", ""
+    if not confirm:
+        return (
+            "**Validation Error:** Check the confirmation box before uploading dry-run results.",
+            gr.update(),
+            gr.update(),
+            gr.update(),
+        )
+
+    log_lines = []
+
+    def log(msg):
+        line = f"[{_timestamp()}] {msg}"
+        log_lines.append(line)
+        return "\n".join(log_lines)
+
+    def state(status="", results="", errors=""):
+        return status, "\n".join(log_lines), results, errors
+
+    try:
+        cfg = _get_config()
+        logger = _get_logger()
+        from drive.auth import get_drive_service
+        from drive.upload import upload_file, create_folder
+        from drive.mapping import load_mapping, get_folder_id, add_store
+        from reports.summary import generate_summary
+        from data.last_run_manager import save_last_run, add_file_entry
+
+        report_name = manifest["report_name"]
+        log(f"Uploading reviewed dry-run results to Google Drive: {report_name}")
+        service = get_drive_service()
+        log("Google Drive authenticated.")
+
+        save_last_run(cfg.LAST_RUN_PATH, {
+            "report_name": report_name,
+            "created_at": datetime.now().isoformat(),
+            "files": [],
+        })
+
+        raw_file_id, _ = upload_file(service, manifest["raw_path"], cfg.GDRIVE_RAW_REPORT_FOLDER_ID)
+        add_file_entry(cfg.LAST_RUN_PATH, raw_file_id, None, None, "raw_backup")
+        log("Raw backup uploaded.")
+
+        mapping = load_mapping(cfg.STORE_MAPPING_PATH)
+        store_results = []
+        errors = []
+
+        for idx, store in enumerate(manifest.get("stores", []), start=1):
+            store_id = store["store_id"]
+            store_name = store["store_name"]
+            folder_id = store.get("folder_id") or get_folder_id(mapping, store_id)
+            log(f"[{idx}/{len(manifest.get('stores', []))}] Uploading: {store_name}")
+
+            if folder_id is None:
+                try:
+                    folder_id = create_folder(service, store_name, cfg.GDRIVE_REPORTS_FOLDER_ID)
+                    add_store(mapping, cfg.STORE_MAPPING_PATH, store_id, store_name, store_name, folder_id)
+                    log(f"  Folder created for {store_name}")
+                except Exception as e:
+                    errors.append(f"{store_name}: Failed to create folder — {e}")
+                    logger.error(f"Dry-run upload folder creation failed for {store_name}: {e}")
+                    log(f"  ERROR creating folder: {e}")
+                    continue
+
+            try:
+                file_id, report_url = upload_file(service, store["report_path"], folder_id)
+                add_file_entry(cfg.LAST_RUN_PATH, file_id, store_id, store_name, "report")
+                store_results.append({"store_id": store_id, "store_name": store_name, "report_url": report_url})
+                log("  Uploaded to Drive.")
+            except Exception as e:
+                errors.append(f"{store_name}: Upload failed — {e}")
+                logger.error(f"Dry-run report upload failed for {store_name}: {e}")
+                log(f"  ERROR uploading: {e}")
+
+        log("Regenerating summary with uploaded report URLs...")
+        summary_path = generate_summary(store_results, report_name, manifest["output_dir"])
+        summary_url = ""
+        try:
+            summary_id, summary_url = upload_file(service, summary_path, cfg.GDRIVE_SUMMARY_FOLDER_ID)
+            add_file_entry(cfg.LAST_RUN_PATH, summary_id, None, None, "summary")
+            log(f"Summary uploaded. Click here: {summary_url}")
+        except Exception as e:
+            errors.append(f"Summary upload failed: {e}")
+            logger.error(f"Dry-run summary upload failed: {e}")
+            log(f"SUMMARY UPLOAD ERROR: {e}")
+
+        succeeded = len(store_results)
+        failed = len(errors)
+        result_lines = [
+            "**Uploaded to Google Drive.**",
+            f"**Processed:** {succeeded + failed} stores | **Succeeded:** {succeeded} | **Failed:** {failed}",
+        ]
+        if summary_url:
+            result_lines.append(f"\n**Summary Report:** [Open summary report]({summary_url})")
+
+        table_header = "| Store Name | Report URL |\n|---|---|\n"
+        table_rows = "\n".join(f"| {r['store_name']} | {r['report_url']} |" for r in store_results)
+        results_table = table_header + table_rows
+        if summary_url:
+            results_table = f"**Summary Report:** [Open summary report]({summary_url})\n\n" + results_table
+
+        error_text = ""
+        if errors:
+            error_text = "**Errors:**\n" + "\n".join(f"- {e}" for e in errors)
+
+        logger.info(f"Dry-run upload complete: {succeeded} succeeded, {failed} failed")
+        return state(status="\n".join(result_lines), results=results_table, errors=error_text)
+    except Exception as e:
+        logger = _get_logger()
+        logger.error(f"Unexpected dry-run upload error: {e}\n{traceback.format_exc()}")
+        log(f"UNEXPECTED ERROR: {e}")
+        log(traceback.format_exc())
+        return state(status=f"**Unexpected Error:** {e}\n\nCheck the log panel and log file for details.")
 
 
 def load_rollback_info():
@@ -647,27 +813,36 @@ with gr.Blocks(title="VAT Reports Generator") as app:
                     type="filepath",
                     visible=False,
                 )
-                store_select = gr.CheckboxGroup(choices=[], value=[], label="Stores (default: all cached stores)")
-                toggle_stores_btn = gr.Button("Select/Deselect All Stores")
-                with gr.Row():
-                    refresh_stores_btn = gr.Button("Refresh Stores")
-                    clear_session_btn = gr.Button("Clear Session", variant="stop")
+                with gr.Accordion("Stores (default: all cached stores)", open=False):
+                    with gr.Row():
+                        refresh_stores_btn = gr.Button("Refresh Stores")
+                        toggle_stores_btn = gr.Button("Select/Deselect All Stores")
+                    store_select = gr.CheckboxGroup(choices=[], value=[], show_label=False)
                 store_cache_status = gr.Markdown()
-                query_status_btn = gr.Button("Check Query Status")
-                query_status_output = gr.Markdown()
-                dry_run_folder_btn = gr.Button("Review the run dry results")
-                dry_run_folder_output = gr.Markdown()
-                generate_btn = gr.Button("Generate Reports", variant="primary")
+                with gr.Row():
+                    clear_session_btn = gr.Button("Clear Session", variant="stop")
+                    generate_btn = gr.Button("Generate Reports", variant="primary")
 
             with gr.Column(scale=2):
                 status_output = gr.Markdown(value="Ready. Fill in the form and click Generate.", label="Status")
-                log_output = gr.Textbox(
-                    label="Live Log",
-                    lines=14,
-                    max_lines=30,
-                    interactive=False,
-                    autoscroll=True,
+                with gr.Row():
+                    query_status_btn = gr.Button("Check Query Status")
+                    dry_run_folder_btn = gr.Button("Review the run dry results")
+                query_status_output = gr.Markdown()
+                dry_run_folder_output = gr.Markdown()
+                dry_run_upload_confirm = gr.Checkbox(
+                    label="I reviewed the dry-run files and want to upload them to Google Drive",
+                    value=False,
                 )
+                upload_dry_run_btn = gr.Button("Upload Last Dry Run to Google Drive", variant="primary")
+                with gr.Accordion("Live Log", open=False):
+                    log_output = gr.Textbox(
+                        show_label=False,
+                        lines=14,
+                        max_lines=30,
+                        interactive=False,
+                        autoscroll=True,
+                    )
                 results_table = gr.Markdown(label="Results")
                 error_output = gr.Markdown(label="Errors")
 
@@ -681,6 +856,11 @@ with gr.Blocks(title="VAT Reports Generator") as app:
         toggle_stores_btn.click(fn=toggle_store_selection, inputs=[store_select], outputs=[store_select])
         query_status_btn.click(fn=check_query_status, outputs=[query_status_output])
         dry_run_folder_btn.click(fn=open_last_dry_run_folder, outputs=[dry_run_folder_output])
+        upload_dry_run_btn.click(
+            fn=upload_last_dry_run_to_drive,
+            inputs=[dry_run_upload_confirm],
+            outputs=[status_output, log_output, results_table, error_output],
+        )
         clear_session_btn.click(
             fn=clear_session_values,
             outputs=[
