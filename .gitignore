@@ -31,3 +31,5 @@ Thumbs.db
 
 # Generated reports (local)
 output/
+
+.DS_Store
