@@ -88,6 +88,12 @@ def _read_sql_template() -> str:
         return f.read()
 
 
+def _advance_to_row_resultset(cursor) -> None:
+    while cursor.description is None:
+        if not cursor.nextset():
+            raise ConnectionError("Database query did not return a result set.")
+
+
 def _require_setting(name: str, value: str) -> str:
     if value:
         return value
@@ -178,8 +184,7 @@ def execute_query(months: list[int], year: int, store_ids: list[int | str] | Non
             logger.info(f"Executing query for months {months}, year {year}...")
             start_time = time.time()
             cursor.execute(sql)
-            while cursor.nextset():
-                pass
+            _advance_to_row_resultset(cursor)
             columns = [desc[0] for desc in cursor.description]
             rows = cursor.fetchall()
             elapsed = time.time() - start_time

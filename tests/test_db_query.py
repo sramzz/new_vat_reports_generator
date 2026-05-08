@@ -238,6 +238,53 @@ class TestExecuteQuery:
             result = execute_query([1], 2026)
         assert result == []
 
+    def test_skips_non_row_resultsets_before_final_select(self):
+        row = ("2026-04-02", 266, "Belchicken A12 Drive")
+        mock_cursor = MagicMock()
+        mock_cursor.description = None
+        mock_cursor.fetchall.return_value = [row]
+
+        nextset_results = iter([True, False])
+
+        def nextset():
+            has_next = next(nextset_results)
+            mock_cursor.description = [
+                ("CreatedOn", None, None, None, None, None, None),
+                ("StoreId", None, None, None, None, None, None),
+                ("RegisterName", None, None, None, None, None, None),
+            ] if has_next else None
+            return has_next
+
+        mock_cursor.nextset.side_effect = nextset
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_conn.__enter__ = MagicMock(return_value=mock_conn)
+        mock_conn.__exit__ = MagicMock(return_value=False)
+
+        with patch("db.query._read_sql_template", return_value=STORE_CURSOR_SQL_TEMPLATE), \
+             patch("db.query._connect", return_value=mock_conn):
+            result = execute_query([4], 2026, store_ids=[266])
+
+        assert result == [{
+            "CreatedOn": "2026-04-02",
+            "StoreId": 266,
+            "RegisterName": "Belchicken A12 Drive",
+        }]
+
+    def test_no_row_resultset_raises_descriptive_error(self):
+        mock_cursor = MagicMock()
+        mock_cursor.description = None
+        mock_cursor.nextset.return_value = False
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_conn.__enter__ = MagicMock(return_value=mock_conn)
+        mock_conn.__exit__ = MagicMock(return_value=False)
+
+        with patch("db.query._read_sql_template", return_value=STORE_CURSOR_SQL_TEMPLATE), \
+             patch("db.query._connect", return_value=mock_conn):
+            with pytest.raises(ConnectionError, match="did not return a result set"):
+                execute_query([4], 2026, store_ids=[266])
+
     def test_reads_sql_template_file(self, tmp_path):
         from db.query import _read_sql_template
         sql_content = "SELECT 1;"

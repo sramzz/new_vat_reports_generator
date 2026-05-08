@@ -1,3 +1,5 @@
+SET NOCOUNT ON;
+
 DROP TABLE IF EXISTS #FinalResult;
 CREATE TABLE #FinalResult
 (
