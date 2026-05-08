@@ -70,6 +70,12 @@ With `AUTH_METHOD=active_directory_interactive` (the default), a **browser windo
 
 If the database query fails because JIT permission is missing, click **Clear Session**, obtain the database JIT permission, then run the report again. Clear Session only resets the current browser session; it does not delete uploaded files, rollback history, logs, or mappings.
 
+### Dry run and upload after review
+
+Use **Dry Run** when you want to check the generated Excel files before uploading anything to Google Drive. Dry run creates the local raw backup, store reports, and summary, but it does not upload files or change rollback history.
+
+After reviewing the files, check **I reviewed the dry-run files and want to upload them to Google Drive** and click **Upload Last Dry Run to Google Drive**. The app uploads the reviewed files, creates the Drive summary, and records the upload so rollback can delete those files later if needed.
+
 ### Rollback tab
 
 Use this tab to undo the most recent upload. You can either:
@@ -85,6 +91,8 @@ Use this tab to undo the most recent upload. You can either:
 - **`data/stores_cache.json`** — Caches the store list used by the Generate Reports store selector. It is updated by clicking **Refresh Stores** in the UI.
 
 - **`db/SQL_Query.sql`** — The SQL query sent to the Azure database. If the database column structure changes, this file may need to be updated accordingly.
+
+- **Logs** — Every app run writes a timestamped log file under `logs/YYYY-MM-DD/YYYY-MM-DD_HH-MM-SS_run.log`. Use **View Logs** in the app to open the logs folder. Logs are meant to explain what happened during a run, including selected inputs, database progress, generated files, Drive uploads, rollback actions, and errors.
 
 - **Updating dependencies** — After pulling new changes from the repository, run the following command to keep dependencies in sync:
   ```
@@ -139,6 +147,10 @@ uv run pytest tests/db_auth/test_sql_auth.py -m live -v -s
 uv run pytest tests/db_auth/test_service_principal.py -m live -v -s
 ```
 
+### For developers
+
+Keep the README focused on people using the tool. Development principles, testing expectations, logging rules, and architecture guidelines live in [PROJECT_PHILOSOPHY.md](PROJECT_PHILOSOPHY.md).
+
 ---
 
 ## 9. Project Structure
@@ -146,8 +158,7 @@ uv run pytest tests/db_auth/test_service_principal.py -m live -v -s
 ```
 new_vat_reports_generator/
 |
-|-- app.py                  # Gradio web interface
-|-- main.py                 # Core orchestration logic
+|-- app.py                  # Gradio web interface and workflow orchestration
 |-- config.py               # Environment variable loading and settings
 |-- logging_config.py       # Logging setup
 |
@@ -168,6 +179,7 @@ new_vat_reports_generator/
 |
 |-- data/
 |   |-- store_mapping.json  # Store name to Drive folder mapping (editable)
+|   |-- stores_cache.json   # Cached store list used by the UI
 |   `-- last_run_manager.py # Tracks files uploaded in the last run
 |
 |-- scripts/

@@ -738,7 +738,12 @@ def rollback_all(confirm: bool):
     if data is None:
         return "No previous run to roll back."
 
-    file_ids = [f["file_id"] for f in data.get("files", [])]
+    files = data.get("files", [])
+    file_ids = [f["file_id"] for f in files]
+    type_counts = {}
+    for f in files:
+        type_counts[f.get("type", "unknown")] = type_counts.get(f.get("type", "unknown"), 0) + 1
+    logger.info(f"Rollback all: {len(file_ids)} files queued for deletion, by type: {type_counts}")
 
     try:
         service = get_drive_service()
@@ -747,7 +752,7 @@ def rollback_all(confirm: bool):
 
     success_count, del_errors = delete_files(service, file_ids)
     clear_last_run(cfg.LAST_RUN_PATH)
-    logger.info(f"Rollback all: deleted {success_count}/{len(file_ids)} files")
+    logger.info(f"Rollback all: deleted {success_count}/{len(file_ids)} files (queued types: {type_counts})")
 
     result = f"**Deleted:** {success_count}/{len(file_ids)} files."
     if del_errors:

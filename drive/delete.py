@@ -4,12 +4,12 @@ logger = logging.getLogger("vat_reports")
 
 
 def delete_files(service, file_ids: list[str]) -> tuple[int, list[str]]:
-    logger.info(f"Deleting {len(file_ids)} files from Google Drive")
+    logger.info(f"Deleting {len(file_ids)} files from Google Drive: {file_ids}")
     success_count = 0
     errors = []
     for file_id in file_ids:
         try:
-            service.files().delete(fileId=file_id).execute()
+            service.files().delete(fileId=file_id, supportsAllDrives=True).execute()
             success_count += 1
             logger.info(f"Deleted file: {file_id}")
         except Exception as e:
