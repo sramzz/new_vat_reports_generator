@@ -655,7 +655,7 @@ with gr.Blocks(title="VAT Reports Generator") as app:
                 store_cache_status = gr.Markdown()
                 query_status_btn = gr.Button("Check Query Status")
                 query_status_output = gr.Markdown()
-                dry_run_folder_btn = gr.Button("Open Last Dry Run Folder")
+                dry_run_folder_btn = gr.Button("Review the run dry results")
                 dry_run_folder_output = gr.Markdown()
                 generate_btn = gr.Button("Generate Reports", variant="primary")
 
