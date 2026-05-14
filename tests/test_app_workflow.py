@@ -3,7 +3,7 @@ import json
 import logging
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import app as vat_app
 
@@ -391,3 +391,89 @@ def test_upload_last_dry_run_creates_new_store_folder_and_updates_mapping(monkey
     assert mapping["stores"][0]["gdriveId"] == "new-folder"
     assert "Uploaded to Google Drive" in status
     assert errors == ""
+
+
+def test_rollback_all_requires_confirmation(monkeypatch):
+    with patch("drive.auth.get_drive_service") as get_drive_service:
+        outputs = list(vat_app.rollback_all(confirm=False))
+
+    get_drive_service.assert_not_called()
+    assert outputs == ["Please check the confirmation box before deleting."]
+
+
+def test_rollback_all_yields_started_progress_and_final_messages(monkeypatch, tmp_path):
+    last_run_path = tmp_path / "last_run.json"
+    last_run_path.write_text(
+        json.dumps({
+            "report_name": "Q2 2026",
+            "created_at": "2026-05-13T10:00:00",
+            "files": [
+                {"file_id": "raw-id", "store_id": None, "store_name": None, "type": "raw_backup"},
+                {"file_id": "store-id", "store_id": 217, "store_name": "Belchicken Aalst", "type": "report"},
+            ],
+        }),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(vat_app, "_get_logger", lambda: logging.getLogger("vat_reports_test"))
+    monkeypatch.setattr(vat_app, "_get_config", lambda: SimpleNamespace(LAST_RUN_PATH=str(last_run_path)))
+
+    service = MagicMock()
+    service.files().delete().execute.return_value = None
+
+    with patch("drive.auth.get_drive_service", return_value=service):
+        outputs = list(vat_app.rollback_all(confirm=True))
+
+    assert outputs[0] == "**Rollback started.** Preparing to delete files from the last run..."
+    assert "Deleting 1 of 2 files..." in outputs[2]
+    assert "Deleting 2 of 2 files..." in outputs[3]
+    assert outputs[-1] == "**Deleted:** 2/2 files."
+    assert not last_run_path.exists()
+
+
+def test_rollback_specific_yields_started_progress_and_final_messages(monkeypatch, tmp_path):
+    last_run_path = tmp_path / "last_run.json"
+    last_run_path.write_text(
+        json.dumps({
+            "report_name": "Q2 2026",
+            "created_at": "2026-05-13T10:00:00",
+            "files": [
+                {"file_id": "store-id-217", "store_id": 217, "store_name": "Belchicken Aalst", "type": "report"},
+                {"file_id": "store-id-218", "store_id": 218, "store_name": "Belchicken Ruisbroek", "type": "report"},
+            ],
+        }),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(vat_app, "_get_logger", lambda: logging.getLogger("vat_reports_test"))
+    monkeypatch.setattr(vat_app, "_get_config", lambda: SimpleNamespace(LAST_RUN_PATH=str(last_run_path)))
+
+    service = MagicMock()
+    service.files().delete().execute.return_value = None
+
+    with patch("drive.auth.get_drive_service", return_value=service):
+        outputs = list(vat_app.rollback_specific(["Belchicken Aalst (ID: 217)"]))
+
+    assert outputs[0] == "**Rollback started.** Preparing to delete selected store files..."
+    assert "Deleting 1 of 1 files..." in outputs[2]
+    assert outputs[-1] == "**Deleted:** 1/1 files for selected stores."
+    remaining = json.loads(last_run_path.read_text(encoding="utf-8"))
+    assert [entry["file_id"] for entry in remaining["files"]] == ["store-id-218"]
+
+
+def test_rollback_specific_auth_failure_does_not_mutate_last_run(monkeypatch, tmp_path):
+    last_run_path = tmp_path / "last_run.json"
+    last_run = {
+        "report_name": "Q2 2026",
+        "created_at": "2026-05-13T10:00:00",
+        "files": [
+            {"file_id": "store-id-217", "store_id": 217, "store_name": "Belchicken Aalst", "type": "report"},
+        ],
+    }
+    last_run_path.write_text(json.dumps(last_run), encoding="utf-8")
+    monkeypatch.setattr(vat_app, "_get_logger", lambda: logging.getLogger("vat_reports_test"))
+    monkeypatch.setattr(vat_app, "_get_config", lambda: SimpleNamespace(LAST_RUN_PATH=str(last_run_path)))
+
+    with patch("drive.auth.get_drive_service", side_effect=Exception("No token")):
+        outputs = list(vat_app.rollback_specific(["Belchicken Aalst (ID: 217)"]))
+
+    assert outputs[-1] == "**Auth Error:** No token"
+    assert json.loads(last_run_path.read_text(encoding="utf-8")) == last_run

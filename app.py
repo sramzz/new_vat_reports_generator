@@ -725,18 +725,22 @@ def load_rollback_info():
 
 def rollback_all(confirm: bool):
     from drive.auth import get_drive_service
-    from drive.delete import delete_files
+    from drive.delete import delete_files_with_progress
     from data.last_run_manager import load_last_run, clear_last_run
 
     cfg = _get_config()
     logger = _get_logger()
 
     if not confirm:
-        return "Please check the confirmation box before deleting."
+        yield "Please check the confirmation box before deleting."
+        return
+
+    yield "**Rollback started.** Preparing to delete files from the last run..."
 
     data = load_last_run(cfg.LAST_RUN_PATH)
     if data is None:
-        return "No previous run to roll back."
+        yield "No previous run to roll back."
+        return
 
     files = data.get("files", [])
     file_ids = [f["file_id"] for f in files]
@@ -744,32 +748,42 @@ def rollback_all(confirm: bool):
     for f in files:
         type_counts[f.get("type", "unknown")] = type_counts.get(f.get("type", "unknown"), 0) + 1
     logger.info(f"Rollback all: {len(file_ids)} files queued for deletion, by type: {type_counts}")
+    yield f"Queued {len(file_ids)} files for deletion. Deleting 0 of {len(file_ids)} files..."
 
     try:
         service = get_drive_service()
     except Exception as e:
-        return f"**Auth Error:** {e}"
+        yield f"**Auth Error:** {e}"
+        return
 
-    success_count, del_errors = delete_files(service, file_ids)
+    success_count = 0
+    del_errors = []
+    for event in delete_files_with_progress(service, file_ids):
+        success_count = event["success_count"]
+        del_errors = event["errors"]
+        yield f"Deleting {event['index']} of {event['total']} files..."
     clear_last_run(cfg.LAST_RUN_PATH)
     logger.info(f"Rollback all: deleted {success_count}/{len(file_ids)} files (queued types: {type_counts})")
 
     result = f"**Deleted:** {success_count}/{len(file_ids)} files."
     if del_errors:
         result += "\n**Errors:**\n" + "\n".join(f"- {e}" for e in del_errors)
-    return result
+    yield result
 
 
 def rollback_specific(selected_stores: list[str]):
     from drive.auth import get_drive_service
-    from drive.delete import delete_files
+    from drive.delete import delete_files_with_progress
     from data.last_run_manager import load_last_run, remove_store_entries
 
     cfg = _get_config()
     logger = _get_logger()
 
     if not selected_stores:
-        return "Please select at least one store."
+        yield "Please select at least one store."
+        return
+
+    yield "**Rollback started.** Preparing to delete selected store files..."
 
     store_ids = []
     for s in selected_stores:
@@ -778,22 +792,32 @@ def rollback_specific(selected_stores: list[str]):
 
     data = load_last_run(cfg.LAST_RUN_PATH)
     if data is None:
-        return "No previous run to roll back."
+        yield "No previous run to roll back."
+        return
 
-    file_ids = remove_store_entries(cfg.LAST_RUN_PATH, store_ids)
+    file_ids = [f["file_id"] for f in data.get("files", []) if f.get("store_id") in store_ids]
+    yield f"Queued {len(file_ids)} files for deletion. Deleting 0 of {len(file_ids)} files..."
 
     try:
         service = get_drive_service()
     except Exception as e:
-        return f"**Auth Error:** {e}"
+        yield f"**Auth Error:** {e}"
+        return
 
-    success_count, del_errors = delete_files(service, file_ids)
+    success_count = 0
+    del_errors = []
+    for event in delete_files_with_progress(service, file_ids):
+        success_count = event["success_count"]
+        del_errors = event["errors"]
+        yield f"Deleting {event['index']} of {event['total']} files..."
+
+    remove_store_entries(cfg.LAST_RUN_PATH, store_ids)
     logger.info(f"Rollback specific stores {store_ids}: deleted {success_count}/{len(file_ids)} files")
 
     result = f"**Deleted:** {success_count}/{len(file_ids)} files for selected stores."
     if del_errors:
         result += "\n**Errors:**\n" + "\n".join(f"- {e}" for e in del_errors)
-    return result
+    yield result
 
 
 # ---- UI Layout ----
@@ -905,8 +929,26 @@ with gr.Blocks(title="VAT Reports Generator") as app:
             return info, gr.update(choices=choices), all_btn_update, specific_btn_update
 
         refresh_btn.click(fn=on_refresh, outputs=[rollback_info, rollback_store_select, delete_all_btn, delete_specific_btn])
-        delete_all_btn.click(fn=rollback_all, inputs=[confirm_checkbox], outputs=[delete_all_output])
-        delete_specific_btn.click(fn=rollback_specific, inputs=[rollback_store_select], outputs=[delete_specific_output])
+        delete_all_event = delete_all_btn.click(
+            fn=lambda: gr.update(interactive=False),
+            outputs=[delete_all_btn],
+        )
+        delete_all_event.then(fn=rollback_all, inputs=[confirm_checkbox], outputs=[delete_all_output]).then(
+            fn=on_refresh,
+            outputs=[rollback_info, rollback_store_select, delete_all_btn, delete_specific_btn],
+        )
+        delete_specific_event = delete_specific_btn.click(
+            fn=lambda: gr.update(interactive=False),
+            outputs=[delete_specific_btn],
+        )
+        delete_specific_event.then(
+            fn=rollback_specific,
+            inputs=[rollback_store_select],
+            outputs=[delete_specific_output],
+        ).then(
+            fn=on_refresh,
+            outputs=[rollback_info, rollback_store_select, delete_all_btn, delete_specific_btn],
+        )
 
     with gr.Row():
         log_btn = gr.Button("View Logs")
